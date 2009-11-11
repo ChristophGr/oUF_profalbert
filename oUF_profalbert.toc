@@ -1,0 +1,9 @@
+## Interface: 30100
+## Author: profalbert
+## Title: oUF profalbert
+## Notes: profalbert style oUF layout
+## OptionalDeps: SharedMedia
+## RequiredDeps: oUF
+
+layout.xml
+layout.lua
