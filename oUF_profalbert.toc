@@ -5,5 +5,6 @@
 ## OptionalDeps: SharedMedia
 ## RequiredDeps: oUF
 
+portrait2.lua
 layout.xml
 layout.lua

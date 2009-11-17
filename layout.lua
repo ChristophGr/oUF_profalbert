@@ -219,7 +219,9 @@ local function updateName(self, event, unit)
 	else
 		color = FACTION_BAR_COLORS[UnitReaction("player", unit)]
 	end
-	self.Name:SetTextColor(color.r, color.g, color.b)
+	if color then
+		self.Name:SetTextColor(color.r, color.g, color.b)
+	end
 	
 	if self.Lvl then
 		updateLevel(self, event, unit)
@@ -245,48 +247,43 @@ local function getStatusText(unit)
 		return "AFK"
 	elseif not UnitIsConnected(unit) then
 		return "Offline"
+	elseif UnitIsDead(unit) then
+		return "Dead"
+	elseif UnitIsGhost(unit) then
+		return "Ghost"
 	end
 end
 
 local statusColor = {
 	["AFK"] = {0,0,1},
-	["Offline"] = {0,0,0},
 }
 
-local function getStatusColor(unit)
-	if UnitIsAFK(unit) then
-		return 0,0,1
-	elseif not UnitIsConnected(unit) then
-		return 0,0,0
-	else
-		return 1,1,1
+local function setStatus(self)
+	local unit = self.unit
+	local bar = self.Health
+	local status = getStatusText(unit)
+	if status == "AFK" then
+		if UnitHealth(unit) ~= UnitHealthMax(unit) then
+			bar.value:SetTextColor(0,0,0)
+			return false
+		else
+			bar.value:SetTextColor(1,1,1)
+			bar.value:SetText("AFK")
+			return true
+		end
+	elseif status then
+		bar:SetValue(0)
+		bar.value:SetTextColor(1,1,1)
+		bar.value:SetText(status)
+		return true
 	end
 end
 
 local function updateHealth(self, event, unit, bar, min, max)
 	local cur, maxhp
 	cur, maxhp = min, max
-
-  if UnitIsAFK(unit) then
-    if min == max then -- when at full health, show only AFK
-    	bar.value:SetText("AFK")
-    else
-  		bar.value:SetTextColor(0,0,0,1)
-  	end
-  elseif not self.aggro then
-    bar.value:SetTextColor(1,1,1,1)
-  end
-
-	if UnitIsDead(unit) then
-		bar:SetValue(0)
-		bar.value:SetText("Dead")
-	elseif UnitIsGhost(unit) then
-		bar:SetValue(0)
-		bar.value:SetText("Ghost")
-	elseif not UnitIsConnected(unit) then
-		bar:SetValue(0)
-		bar.value:SetText("Offline")
-	else
+	
+	if not setStatus(self) then
 		formats[unit].health(bar.value, cur, maxhp)
 	end
 	self:UNIT_NAME_UPDATE(event, unit)
@@ -402,7 +399,7 @@ local function updateFlags(self)
 			-- replace text
 			self.Health.value:SetTextColor(1,1,1)
 			self.Health.value:SetText(status)
-		else
+		elseif status == "AFK" then
 			self.Health.value:SetTextColor(statusColor[status])
 			-- color text
 		end
@@ -501,8 +498,11 @@ local function setStyle(settings, self, unit)
 			else
 				portrait:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0)
 			end
-			portrait.type = "3D"
-			self.Portrait = portrait
+			local fallback = portrait:CreateTexture()
+			fallback:SetAllPoints(portrait)
+			portrait.fallback = fallback
+			self.Portrait2 = portrait
+			
 	end
 	
 	-- Healthbar
@@ -545,8 +545,9 @@ local function setStyle(settings, self, unit)
 	else
 		hp.value:SetPoint("RIGHT", -2, 0)
 	end
-	
+	if unit and (unit == "player" or unit:match("party") or unit:match("raid")) then
 	AceTimer:ScheduleRepeatingTimer(updateFlags, 1, self)
+	end
 	
 --	self:RegisterEvent("PLAYER_FLAGS_CHANGED", function() updateFlags(self) end)
 --	local updateFrame = CreateFrame("frame")
@@ -798,7 +799,7 @@ target:SetPoint("LEFT", UIParent, "CENTER", 80, -230)
 oUF:SetActiveStyle("pa_focus")
 -- focus
 local focus = oUF:Spawn("focus", "oUF_Focus")
-focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 320, -200)
+focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 320, -240)
 
 oUF:SetActiveStyle("Ammo")
 -- group
@@ -878,7 +879,8 @@ end
 -- MTs and mt-targets
 oUF:SetActiveStyle("Ammo_Small")
 local mts = oUF:Spawn("header", "oUF_MTs")
-mts:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -275)
+--mts:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -275)
+mts:SetPoint("TOPLEFT", grid[6], "BOTTOMLEFT", 0, -30)
 mts:SetManyAttributes(
 "template", "oUF_profalbert_mtt",
 "showRaid", true,
@@ -915,3 +917,4 @@ partyToggle:SetScript('OnEvent', function(self)
 		end
 	end
 end)
+
