@@ -312,6 +312,8 @@ local function getStatusByName(name)
 	return val
 end
 
+local updateHealth
+
 local function updateStatusText(self, unit, status)
 	local cur, max = UnitHealth(unit), UnitHealthMax(unit)
 	local value = self.Health.value
@@ -330,7 +332,8 @@ local function updateStatusText(self, unit, status)
 				value:SetText("DND")
 			end
 		else
-			formats[unit].health(value, cur, max)
+--			formats[unit].health(value, cur, max)
+			updateHealth(self, nil, unit, self.Health, UnitHealth(unit), UnitHealthMax(unit))
 		end
 	else
 		if status and next(status) then
@@ -344,7 +347,8 @@ local function updateStatusText(self, unit, status)
 		else
 			value:SetTextColor(1,1,1)
 		end
-		formats[unit].health(value, cur, max)
+--		formats[unit].health(value, cur, max)
+		updateHealth(self, nil, unit, self.Health, UnitHealth(unit), UnitHealthMax(unit))
 	end
 end
 
@@ -355,14 +359,14 @@ local function Banzai(self, unit, aggro)
 	updateStatusText(self, unit, status)
 end
 
-local function updateHealth(self, event, unit, bar, min, max)
+function updateHealth(self, event, unit, bar, min, max)
 	local cur, maxhp
 	cur, maxhp = min, max
 
 	local status = unit_status[UnitGUID(unit)] --getStatusByGUID(UnitGUID(unit))
 	local value = bar.value
 	if cur == max then
-		if not status or not next(status) then
+		if not status or not next(status) and not UnitIsDeadOrGhost(unit) then
 			formats[unit].health(value, cur, max)		
 		end
 	elseif UnitIsDead(unit) then
