@@ -1,3 +1,7 @@
+local _G = _G
+local oUF_profalbert = {}
+_G.oUF_profalbert = oUF_profalbert
+
 -- the local upvalues bandwagon
 local select = select
 local UnitClass = UnitClass
@@ -152,6 +156,7 @@ formats.focustarget.health = fmt_deficit
 formats.focustarget.power = fmt_perc
 
 formats.raid.health = fmt_deficitnomax
+formats.raidtarget.health = fmt_perc
 
 local classificationFormats = {
 	worldboss = "??b",
@@ -242,6 +247,7 @@ local function updateName(self, event, unit)
 	end
 end
 
+--[[
 local function getStatusText(unit)
 	if UnitIsAFK(unit) then
 		return "AFK"
@@ -254,11 +260,8 @@ local function getStatusText(unit)
 	end
 end
 
-local statusColor = {
-	["AFK"] = {0,0,1},
-}
-
 local function setStatus(self)
+	
 	local unit = self.unit
 	local bar = self.Health
 	local status = getStatusText(unit)
@@ -278,16 +281,150 @@ local function setStatus(self)
 		return true
 	end
 end
+--]]
+
+local unit_status = {}
+local empty = {}
+
+_G.unit_status = unit_status
+
+local function getStatusByGUID(guid)
+	if not guid then
+		return
+	end
+	local val = unit_status[guid]
+	if not val then
+		val = {}
+		unit_status[guid] = val
+	end
+	return val
+end
+
+local function getStatusByName(name)
+	if not name then
+		return
+	end
+	local val = unit_status[name]
+	if not val then
+		val = {}
+		unit_status[name] = val
+	end
+	return val
+end
+
+local function updateStatusText(self, unit, status)
+	local cur, max = UnitHealth(unit), UnitHealthMax(unit)
+	local value = self.Health.value
+	if cur == max then
+		value:SetTextColor(1,1,1)
+		if status and next(status) then
+			if status.aggro then
+				value:SetTextColor(1,0,0)
+				formats[unit].health(value, cur, max)
+			elseif status.offline then
+				self.Health:SetValue(0)
+				value:SetText("Offline")
+			elseif status.afk then
+				value:SetText("AFK")
+			elseif status.dnd then
+				value:SetText("DND")
+			end
+		else
+			formats[unit].health(value, cur, max)
+		end
+	else
+		if status and next(status) then
+			if status.aggro then
+				value:SetTextColor(1,0,0)
+			elseif status.afk then
+				value:SetTextColor(0,0,0)
+			else
+				value:SetTextColor(1,1,1)
+			end
+		else
+			value:SetTextColor(1,1,1)
+		end
+		formats[unit].health(value, cur, max)
+	end
+end
+
+local function Banzai(self, unit, aggro)
+	if not UnitIsPlayer(unit) then return end
+	local status = getStatusByGUID(UnitGUID(unit))
+	status.aggro = aggro == 1 or nil
+	updateStatusText(self, unit, status)
+end
 
 local function updateHealth(self, event, unit, bar, min, max)
 	local cur, maxhp
 	cur, maxhp = min, max
-	
-	if not setStatus(self) then
-		formats[unit].health(bar.value, cur, maxhp)
+
+	local status = unit_status[UnitGUID(unit)] --getStatusByGUID(UnitGUID(unit))
+	local value = bar.value
+	if cur == max then
+		if not status or not next(status) then
+			formats[unit].health(value, cur, max)		
+		end
+	elseif UnitIsDead(unit) then
+		value:SetText("Dead")
+		bar:SetValue(0)
+	elseif UnitIsGhost(unit) then
+		value:SetText("Ghost")
+		bar:SetValue(0)
+	else
+		formats[unit].health(value, cur, max)		
 	end
+	--[[
+	if cur == maxhp then
+		value:SetTextColor(1,1,1)
+		if status and next(status) then
+			if status.aggro then
+				value:SetTextColor(1,0,0)
+				value:SetText("Aggro")
+			elseif status.offline then
+				bar:SetValue(0)
+				value:SetText("Offline")
+			elseif status.afk then
+				value:SetText("AFK")
+			elseif status.dnd then
+				value:SetText("DND")
+			end
+		else
+			formats[unit].health(value, cur, maxhp)
+		end
+	elseif UnitIsDead(unit) then
+		value:SetText("Dead")
+		bar:SetValue(0)
+	elseif UnitIsGhost(unit) then
+		value:SetText("Ghost")
+		bar:SetValue(0)
+	else
+		if status and next(status) then
+			if status.aggro then
+				value:SetTextColor(1,0,0)
+			elseif status.afk then
+				value:SetTextColor(0,0,0)
+			else
+				value:SetTextColor(1,1,1)
+			end
+		else
+			value:SetTextColor(1,1,1)
+		end
+		formats[unit].health(value, cur, maxhp)
+	end--]]
 	self:UNIT_NAME_UPDATE(event, unit)
 end
+
+local function updateStatus(self)
+	local unit = self.unit
+	if not unit then return end
+	local status = getStatusByGUID(UnitGUID(unit))
+	if not status then return end
+	status.offline = (not UnitIsConnected(unit)) or nil
+	status.afk = UnitIsAFK(unit)
+	updateStatusText(self, unit, status)
+end
+oUF_profalbert.updateStatus = updateStatus
 
 local function updateHealth2(self, event, unit, bar, min, max)
 	if min and max and not UnitIsDead(unit) and not UnitIsGhost(unit) and UnitIsConnected(unit) then
@@ -356,19 +493,6 @@ local function getFontString(parent)
 	return fs
 end
 
-local function Banzai(self, unit, aggro)
-	if aggro == 1 then
-		self.aggro = true
-		self.Health.value:SetTextColor(1,0,0)
-		if UnitHealth(unit) == UnitHealthMax(unit) then
-			self.Health.value:SetText("Aggro")
-		end
-	else	
-		self.Health.value:SetTextColor(1,1,1)
-		self.aggro = false
-	end
-end
-
 local function CustomTimeText(self, duration)
 	local tformat = "%.1f"
 	if self.delay ~= 0 then
@@ -385,7 +509,7 @@ local function updateBarColor(self, event, unit)
 	self.Health.colorReaction = not UnitIsPlayer(unit)
 end
 
-local function updateFlags(self)
+--[[local function updateFlags(self)
 	if self.aggro then return end
 	local unit = self.unit
 	if not unit then return end
@@ -404,7 +528,9 @@ local function updateFlags(self)
 			-- color text
 		end
 	end
-end
+end--]]
+
+_G.unit_ids = {}
 
 local function setStyle(settings, self, unit)
 	self.menu = menu -- Enable the menus
@@ -545,8 +671,11 @@ local function setStyle(settings, self, unit)
 	else
 		hp.value:SetPoint("RIGHT", -2, 0)
 	end
-	if unit and (unit == "player" or unit:match("party") or unit:match("raid")) then
-	AceTimer:ScheduleRepeatingTimer(updateFlags, 1, self)
+	if unit then
+		unit_ids[unit] = true
+	end
+	if unit and (unit == "player" or unit:match("party%d$") or unit:match("raid%d+$")) then
+		AceTimer:ScheduleRepeatingTimer(updateStatus, 1, self)
 	end
 	
 --	self:RegisterEvent("PLAYER_FLAGS_CHANGED", function() updateFlags(self) end)
@@ -673,6 +802,10 @@ local function setStyle(settings, self, unit)
 		self.ignoreBanzai = true
 	end
 --]]
+
+	if unit and unit:match("target") then
+		self.ignoreBanzai = true
+	end
 	local buffx = settings["buffs-x"]
 	local buffy = settings["buffs-y"]
 	local buffs = buffx and buffy and (buffx * buffy)
@@ -762,7 +895,7 @@ oUF:RegisterStyle("Ammo", setmetatable(default, {__call = setStyle}))
 
 oUF:RegisterStyle("pa_focus", setmetatable(focus, {__call = setStyle}))
 
-oUF:RegisterStyle("Ammo_Small", setmetatable({
+local small = setmetatable({
 	["initial-width"] = 80,
 	["initial-height"] = 35,
 	["namelength"] = 15,
@@ -770,7 +903,9 @@ oUF:RegisterStyle("Ammo_Small", setmetatable({
 	["ppheight"] = 3,
 	["debuffs-x"] = 1,
 	["debuffs-y"] = 3,
-}, {__call = setStyle}))
+}, {__call = setStyle})
+oUF_profalbert.small = small
+oUF:RegisterStyle("Ammo_Small", small)
 
 oUF:RegisterStyle("Ammo_Grid", setmetatable({
 	["initial-width"] = 60,
@@ -804,13 +939,13 @@ focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 320, -240)
 oUF:SetActiveStyle("Ammo")
 -- group
 local party	= oUF:Spawn("header", "oUF_Party")
---party:SetAttribute("template", "oUF_profalbert_party")
+party:SetAttribute("template", "oUF_profalbert_party")
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 10, -50)
 party:SetAttribute("yOffset", -31)
 party:SetAttribute("showParty", true)
 --party:SetAttribute("template", oUF_profalbert_party)
 -- do not show in raid
--- RegisterStateDriver(party, "visibility", "[group:raid]hide;show")
+RegisterStateDriver(party, "visibility", "[group:raid]hide;show")
 party:Show()
 
 --oUF:RegisterEvent("RAID_ROSTER_UPDATE", updateParty)
@@ -848,10 +983,12 @@ local pts = {}
 pts[1] = oUF:Spawn("party1target", "oUF_Party1Target")
 pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
 pts[1]:SetParent(party)
+--pts[1]:Disable()
 for i =2, 4 do
 	pts[i] = oUF:Spawn("party"..i.."target", "oUF_Party"..i.."Target")
 	pts[i]:SetPoint("TOP", pts[i-1], "BOTTOM", 0, -50)
-	pts[1]:SetParent(party)
+	pts[i]:SetParent(party)
+--	pts[i]:Disable()
 end
 
 -- raid frames
@@ -867,13 +1004,15 @@ for i = 1, 8 do
 		grid[i]:SetPoint("TOPLEFT", grid[i-1], "TOPRIGHT", 20, 0)
 	end
 	grid[i]:SetManyAttributes(
+		"template", "oUF_profalbert_raid",
 		"yOffset", -3,
 		"groupFilter", tostring(i),
 		"showRaid", true,
 		"point", "TOP",
 		"sortDir", "DESC"
 	)
-	grid[i]:Show()
+	RegisterStateDriver(grid[i], "visibility", "[group:raid]show;hide")
+--	grid[i]:Show()
 end
 
 -- MTs and mt-targets
