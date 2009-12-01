@@ -895,26 +895,55 @@ mts:Show()
 RuneFrame:ClearAllPoints()
 RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
 
+local partyToggleEvent
+local function partyToggleEvent(self, event)
+	if(InCombatLockdown()) and event ~= "PLAYER_LOGIN" then
+		self:RegisterEvent('PLAYER_REGEN_ENABLED')
+--		self:SetScript("OnUpdate", partyToggleEvent)
+	else
+		self:UnregisterEvent('PLAYER_REGEN_ENABLED')
+		if GetNumRaidMembers() > (GetNumPartyMembers() + 1) then
+			 -- if there is a unit in another party, switch to raid mode
+			--party:Hide()
+			--for i,v in ipairs(grid) do v:Show() end
+			for i,v in ipairs(pts) do v:Disable()	end
+		else
+			--party:Show()
+			--for i,v in ipairs(grid) do v:Hide() end
+			for i,v in ipairs(pts) do v:Enable() end
+		end
+	end
+end
+
 local partyToggle = CreateFrame('Frame')
 partyToggle:RegisterEvent('PLAYER_LOGIN')
 partyToggle:RegisterEvent('RAID_ROSTER_UPDATE')
 partyToggle:RegisterEvent('PARTY_LEADER_CHANGED')
 partyToggle:RegisterEvent('PARTY_MEMBERS_CHANGED')
-partyToggle:SetScript('OnEvent', function(self)
-	if(InCombatLockdown()) then
-		self:RegisterEvent('PLAYER_REGEN_ENABLED')
-	else
-		self:UnregisterEvent('PLAYER_REGEN_ENABLED')
-		if GetNumRaidMembers() > (GetNumPartyMembers() + 1) then
-			 -- if there is a unit in another party, switch to raid mode
-			party:Hide()
-			for i,v in ipairs(grid) do v:Show() end
+partyToggle:SetScript('OnEvent', partyToggleEvent)
+
+local healtree = {
+	["SHAMAN"] = 3,
+	["PRIEST"] = 2,
+}
+
+local function playerIsHealer()
+	local _, _, points = GetTalentTabInfo(healtree[playerClass])
+	return points > (UnitLevel("player")/2)
+end
+
+local talentUpdateFrame = CreateFrame("Frame")
+talentUpdateFrame:RegisterEvent("PLAYER_ALIVE")
+talentUpdateFrame:RegisterEvent('PLAYER_LOGIN')
+talentUpdateFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
+talentUpdateFrame:SetScript("OnEvent", function(self)
+		print("check for healer")
+		if playerIsHealer() then
+			party:SetAttribute("showPlayer", true)
 			for i,v in ipairs(pts) do v:Disable()	end
 		else
-			party:Show()
-			for i,v in ipairs(grid) do v:Hide() end
+			party:SetAttribute("showPlayer", false)
 			for i,v in ipairs(pts) do v:Enable() end
 		end
-	end
-end)
+	end)
 
