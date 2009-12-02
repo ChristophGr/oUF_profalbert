@@ -1080,7 +1080,6 @@ talentUpdateFrame:RegisterEvent("PLAYER_ALIVE")
 talentUpdateFrame:RegisterEvent('PLAYER_LOGIN')
 talentUpdateFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
 talentUpdateFrame:SetScript("OnEvent", function(self)
-		print("check for healer")
 		if playerIsHealer() then
 			party:SetAttribute("showPlayer", true)
 			for i,v in ipairs(pts) do v:Disable()	end
