@@ -159,26 +159,29 @@ formats.raid.health = fmt_deficitnomax
 formats.raidtarget.health = fmt_perc
 
 local classificationFormats = {
-	worldboss = "??b",
-	rareelite = "%d+r",
-	elite = "%d+",
-	rare = "%dr",
-	normal = "%d",
-	trivial = "%d~",
+	worldboss = "%sb",
+	rareelite = "%s+r",
+	elite = "%s+",
+	rare = "%sr",
+	normal = "%s",
+	trivial = "%s~",
 }
 
 local function getDifficultyColor(level)
+	if type(level) ~= 'number' then
+		return "|cFFFF1A1A%s|r"
+	end
 	local levelDiff = level - UnitLevel("player")
 	if levelDiff >= 5 then
-		return 1.00, 0.10, 0.10
+		return "|cFFFF1A1A%s|r"
 	elseif levelDiff >= 3 then
-		return 1.00, 0.50, 0.25
+		return "|cFFFF7F3F%s|r"
 	elseif levelDiff >= -2 then
-		return 1.00, 1.00, 0.10
+		return "|cFFFFFF1A%s|r"
 	elseif -levelDiff <= GetQuestGreenRange() then
-		return 0.25, 0.75, 0.25
+		return "|cFF3FBF3F%s|r"
 	end
-	return 0.50, 0.50, 0.50
+	return "|cFF7F7F7F%s|r"
 end
 
 -- This is the core of RightClick menus on diffrent frames
@@ -198,8 +201,12 @@ local function updateLevel(self, event, unit)
 	
 	local lvl = self.Lvl
 	local level = UnitLevel(unit)
-
-	lvl:SetFormattedText(classificationFormats[UnitClassification(unit)] or classificationFormats["normal"], level)	lvl:SetTextColor(getDifficultyColor(level))
+	if level < 0 then
+		level = "??"
+	end
+	
+	level = getDifficultyColor(level):format(level)
+	lvl:SetFormattedText(classificationFormats[UnitClassification(unit)] or classificationFormats["normal"], level)--	lvl:SetTextColor(getDifficultyColor(level))
 
 end
 
@@ -1071,8 +1078,10 @@ local healtree = {
 }
 
 local function playerIsHealer()
-	local _, _, points = GetTalentTabInfo(healtree[playerClass])
-	return points > (UnitLevel("player")/2)
+	if healtree[playerClass] then
+		local _, _, points = GetTalentTabInfo(healtree[playerClass])
+		return points > (UnitLevel("player")/2)
+	end
 end
 
 local talentUpdateFrame = CreateFrame("Frame")
@@ -1080,12 +1089,14 @@ talentUpdateFrame:RegisterEvent("PLAYER_ALIVE")
 talentUpdateFrame:RegisterEvent('PLAYER_LOGIN')
 talentUpdateFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
 talentUpdateFrame:SetScript("OnEvent", function(self)
-		if playerIsHealer() then
-			party:SetAttribute("showPlayer", true)
-			for i,v in ipairs(pts) do v:Disable()	end
-		else
-			party:SetAttribute("showPlayer", false)
-			for i,v in ipairs(pts) do v:Enable() end
+		if not InCombatLockdown() then
+			if playerIsHealer() then
+				party:SetAttribute("showPlayer", true)
+				for i,v in ipairs(pts) do v:Disable()	end
+			else
+				party:SetAttribute("showPlayer", false)
+				for i,v in ipairs(pts) do v:Enable() end
+			end
 		end
 	end)
 
