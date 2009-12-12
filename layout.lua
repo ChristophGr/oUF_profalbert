@@ -1015,7 +1015,7 @@ for i = 1, 8 do
 		grid[i]:SetPoint("TOPLEFT", grid[i-1], "TOPRIGHT", 20, 0)
 	end
 	grid[i]:SetManyAttributes(
-		"template", "oUF_profalbert_raid",
+--		"template", "oUF_profalbert_raid",
 		"yOffset", -3,
 		"groupFilter", tostring(i),
 		"showRaid", true,
