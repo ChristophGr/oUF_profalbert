@@ -113,7 +113,7 @@ local fmtmeta = { __index = function(self, key)
 	end
 end}
 
-local formats = setmetatable({}, { 
+local formats = setmetatable({}, {
 	__index = function(self, key)
 		if type(key) == "nil" then return nil end
 		if not rawget(self, key) then
@@ -198,15 +198,16 @@ end
 
 local function updateLevel(self, event, unit)
 	if self.unit ~= unit then return end
-	
+
 	local lvl = self.Lvl
 	local level = UnitLevel(unit)
 	if level < 0 then
 		level = "??"
 	end
-	
+
 	level = getDifficultyColor(level):format(level)
-	lvl:SetFormattedText(classificationFormats[UnitClassification(unit)] or classificationFormats["normal"], level)--	lvl:SetTextColor(getDifficultyColor(level))
+	lvl:SetFormattedText(classificationFormats[UnitClassification(unit)] or classificationFormats["normal"], level)
+--	lvl:SetTextColor(getDifficultyColor(level))
 
 end
 
@@ -216,7 +217,7 @@ end
 
 local function updateName(self, event, unit)
 	if self.unit ~= unit then return end
-	
+
 	local name = UnitName(unit) or ""
 	if self.namelength then
 		name = name:sub(0, self.namelength)
@@ -234,7 +235,7 @@ local function updateName(self, event, unit)
 	if color then
 		self.Name:SetTextColor(color.r, color.g, color.b)
 	end
-	
+
 	if self.Lvl then
 		updateLevel(self, event, unit)
 	end
@@ -254,70 +255,17 @@ local function updateName(self, event, unit)
 	end
 end
 
---[[
-local function getStatusText(unit)
-	if UnitIsAFK(unit) then
-		return "AFK"
-	elseif not UnitIsConnected(unit) then
-		return "Offline"
-	elseif UnitIsDead(unit) then
-		return "Dead"
-	elseif UnitIsGhost(unit) then
-		return "Ghost"
-	end
-end
-
-local function setStatus(self)
-	
-	local unit = self.unit
-	local bar = self.Health
-	local status = getStatusText(unit)
-	if status == "AFK" then
-		if UnitHealth(unit) ~= UnitHealthMax(unit) then
-			bar.value:SetTextColor(0,0,0)
-			return false
-		else
-			bar.value:SetTextColor(1,1,1)
-			bar.value:SetText("AFK")
-			return true
+local unit_status = setmetatable({}, { __index = function(self, key)
+		if not key then return nil end
+		local val = rawget(self, key)
+		if not val then
+			val = {}
+			self[key] = val
 		end
-	elseif status then
-		bar:SetValue(0)
-		bar.value:SetTextColor(1,1,1)
-		bar.value:SetText(status)
-		return true
-	end
-end
---]]
+		return val
+	end})
 
-local unit_status = {}
-local empty = {}
-
-_G.unit_status = unit_status
-
-local function getStatusByGUID(guid)
-	if not guid then
-		return
-	end
-	local val = unit_status[guid]
-	if not val then
-		val = {}
-		unit_status[guid] = val
-	end
-	return val
-end
-
-local function getStatusByName(name)
-	if not name then
-		return
-	end
-	local val = unit_status[name]
-	if not val then
-		val = {}
-		unit_status[name] = val
-	end
-	return val
-end
+-- _G.unit_status = unit_status
 
 local updateHealth
 
@@ -355,7 +303,7 @@ local function updateStatusText(self, unit, status)
 			value:SetTextColor(1,1,1)
 		end
 --		formats[unit].health(value, cur, max)
-		updateHealth(self, nil, unit, self.Health, UnitHealth(unit), UnitHealthMax(unit))
+		--updateHealth(self, nil, unit, self.Health, UnitHealth(unit), UnitHealthMax(unit))
 	end
 end
 
@@ -363,6 +311,16 @@ local function Banzai(self, unit, aggro)
 	if not UnitIsPlayer(unit) then return end
 	local status = getStatusByGUID(UnitGUID(unit))
 	status.aggro = aggro == 1 or nil
+	updateStatusText(self, unit, status)
+end
+
+local function updateStatus(self)
+	local unit = self.unit
+	if not unit then return end
+	local status = unit_status[UnitGUID(unit)]
+	if not status then return end
+	status.offline = (not UnitIsConnected(unit)) or nil
+	status.afk = UnitIsAFK(unit)
 	updateStatusText(self, unit, status)
 end
 
@@ -374,7 +332,9 @@ function updateHealth(self, event, unit, bar, min, max)
 	local value = bar.value
 	if cur == max then
 		if not status or not next(status) and not UnitIsDeadOrGhost(unit) then
-			formats[unit].health(value, cur, max)		
+			formats[unit].health(value, cur, max)
+		else
+			updateStatus(self)
 		end
 	elseif UnitIsDead(unit) then
 		value:SetText("Dead")
@@ -383,7 +343,7 @@ function updateHealth(self, event, unit, bar, min, max)
 		value:SetText("Ghost")
 		bar:SetValue(0)
 	else
-		formats[unit].health(value, cur, max)		
+		formats[unit].health(value, cur, max)
 	end
 	--[[
 	if cur == maxhp then
@@ -426,15 +386,6 @@ function updateHealth(self, event, unit, bar, min, max)
 	self:UNIT_NAME_UPDATE(event, unit)
 end
 
-local function updateStatus(self)
-	local unit = self.unit
-	if not unit then return end
-	local status = getStatusByGUID(UnitGUID(unit))
-	if not status then return end
-	status.offline = (not UnitIsConnected(unit)) or nil
-	status.afk = UnitIsAFK(unit)
-	updateStatusText(self, unit, status)
-end
 oUF_profalbert.updateStatus = updateStatus
 
 local function updateHealth2(self, event, unit, bar, min, max)
@@ -471,9 +422,9 @@ end
 
 local oldr, oldg, oldb
 local function OnEnter(self)
---	oldr, oldg, oldb = 
+--	oldr, oldg, oldb =
 --	self.Name:SetTextColor(1, 0, 1)
-	
+
 	UnitFrame_OnEnter(self)
 end
 
@@ -541,8 +492,6 @@ end
 	end
 end--]]
 
-_G.unit_ids = {}
-
 local function setStyle(settings, self, unit)
 	self.menu = menu -- Enable the menus
 	self:RegisterForClicks("anyup")
@@ -553,12 +502,12 @@ local function setStyle(settings, self, unit)
 	local height = settings["initial-height"] or 20
 
 	local grid = settings["ammo-grid"]
-	
+
 	if grid then
 		self.grid = true
 	end
 	self.namelength = settings["namelength"]
-	
+
 	local hpheight = settings["hpheight"] or 22
 	local ppheight = settings["ppheight"] or 16
 	local bbheight = settings["initial-height"] - (hpheight + ppheight + 2)
@@ -566,7 +515,7 @@ local function setStyle(settings, self, unit)
 	-- Background
 	self:SetBackdrop(backdrop)
 	self:SetBackdropColor(0,0,0,1)
-	
+
 	-- pet TTL
 	if unit == "pet" then
 		local ttl = getFontString(self)
@@ -601,7 +550,7 @@ local function setStyle(settings, self, unit)
 				end
 			end)
 	end
-	
+
 	local bb = CreateFrame("StatusBar", nil, self)
 	bb:SetHeight(bbheight)
 --	bb.value = getFontString(bb)
@@ -610,7 +559,7 @@ local function setStyle(settings, self, unit)
 	bb:SetPoint("TOPRIGHT")
 --	bb:SetStatusBarColor(255, 100, 100, 255)
 --	bb:SetStatusBarTexture(statusbartexture)
-	
+
 	if settings["level"] then
 		self.Lvl = getFontString(bb)
 		self.Lvl:SetPoint("LEFT", bb, "LEFT", 2, 0)
@@ -639,15 +588,15 @@ local function setStyle(settings, self, unit)
 			fallback:SetAllPoints(portrait)
 			portrait.fallback = fallback
 			self.Portrait2 = portrait
-			
+
 	end
-	
+
 	-- Healthbar
 	local hp
 	hp = CreateFrame("StatusBar", nil, self)
 	hp:SetHeight(hpheight)
 	hp:SetStatusBarTexture(statusbartexture)
-	
+
 	if bb then
 		hp:SetPoint("TOPLEFT", bb, "BOTTOMLEFT", 0, -1.5)
 		hp:SetPoint("TOPRIGHT", bb, "BOTTOMRIGHT", 0, -1.5)
@@ -655,7 +604,7 @@ local function setStyle(settings, self, unit)
 		hp:SetPoint("TOPLEFT")
 		hp:SetPoint("TOPRIGHT")
 	end
-	
+
 	if portrait then
 		if unit == "target" then
 			hp:SetPoint("TOPRIGHT", portrait, "TOPLEFT")
@@ -669,7 +618,7 @@ local function setStyle(settings, self, unit)
 	hp.bg:SetAllPoints(hp)
 	hp.bg:SetTexture(statusbartexture)
 	hp.bg:SetAlpha(.5)
-	
+
 	-- healthbar coloring, happy true fest
 	hp.colorHappiness = true
 	hp.colorTapping = true
@@ -682,17 +631,14 @@ local function setStyle(settings, self, unit)
 	else
 		hp.value:SetPoint("RIGHT", -2, 0)
 	end
-	if unit then
-		unit_ids[unit] = true
-	end
 	if unit and (unit == "player" or unit:match("party%d$") or unit:match("raid%d+$")) then
 		AceTimer:ScheduleRepeatingTimer(updateStatus, 1, self)
 	end
-	
+
 --	self:RegisterEvent("PLAYER_FLAGS_CHANGED", function() updateFlags(self) end)
 --	local updateFrame = CreateFrame("frame")
 --	updateFrame:SetScript("OnUpdate", function() updateFlags(self) end)
-	
+
 	self.PreUpdateHealth = updateBarColor
 	self.Health = hp
 
@@ -707,7 +653,7 @@ local function setStyle(settings, self, unit)
 	else
 		self.PostUpdateHealth = updateHealth
 	end
-	
+
 	local icon = hp:CreateTexture(nil, "OVERLAY")
 	icon:SetHeight(16)
 	icon:SetWidth(16)
@@ -716,7 +662,7 @@ local function setStyle(settings, self, unit)
 	self.RaidIcon = icon
 	local pp
 	if ppheight then
-		-- Power Bar 
+		-- Power Bar
 		pp = CreateFrame("StatusBar", nil, self)
 		pp:SetHeight(ppheight)
 		pp:SetStatusBarTexture(statusbartexture)
@@ -724,7 +670,7 @@ local function setStyle(settings, self, unit)
 		pp:SetPoint("LEFT")
 		pp:SetPoint("RIGHT")
 		pp:SetPoint("TOP", hp, "BOTTOM")
-		
+
 		if portrait then
 			if unit == "target" then
 				pp:SetPoint("RIGHT", portrait, "LEFT")
@@ -744,7 +690,7 @@ local function setStyle(settings, self, unit)
 
 		self.Power = pp
 		self.PostUpdatePower = updatePower
-		
+
 		if ppheight > 5 then -- anything larger than tiny has text on the powerbar
 			pp.value = getFontString(pp)
 			pp.value:SetPoint("CENTER")
@@ -758,16 +704,16 @@ local function setStyle(settings, self, unit)
 		leader:SetPoint("TOPLEFT", self, "TOPLEFT", -8, 8)
 		leader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
 		self.Leader = leader
-		
+
 		local masterlooter = hp:CreateTexture(nil, "OVERLAY")
 		masterlooter:SetHeight(16)
 		masterlooter:SetWidth(16)
 		masterlooter:SetPoint("TOPRIGHT", self, "TOPRIGHT", 8, 8)
 		masterlooter:SetTexture("Interface\\GroupFrame\\UI-Group-MasterLooter")
 		self.MasterLooter = masterlooter
-		
+
 	end
-	
+
 	if unit == "player" then -- player gets resting and combat
 		local resting = pp:CreateTexture(nil, "OVERLAY")
 		resting:SetHeight(16)
@@ -784,16 +730,16 @@ local function setStyle(settings, self, unit)
 		combat:SetTexCoord(0.57, 0.90, 0.08, 0.41)
 		self.Combat = combat
 	end
-		
+
 	-- player, pet party and partypets get debuff highlighting
 	if not unit or unit == "player" or unit == "pet" or unit:find("partypet%d") then
 		if micro then
 			local dbh = hp:CreateTexture(nil, "OVERLAY")
 			dbh:SetWidth(16)
-			
+
 			dbh:SetPoint("TOPLEFT", self, "TOPRIGHT")
 			dbh:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT")
-			
+
 			dbh:SetTexture(statusbartexture)
 --			dbh:SetVertexColor(0,0,0,0) -- set alpha to 0 to hide the texture
 			self.DebuffHighlight = dbh
@@ -805,7 +751,7 @@ local function setStyle(settings, self, unit)
 	end
 
 	self.Banzai = Banzai
---[[	
+--[[
 	if micro then -- micro units (raid) don't color healthbar but the health text
 		self.Banzai = Banzai
 	end
@@ -820,17 +766,17 @@ local function setStyle(settings, self, unit)
 	local buffx = settings["buffs-x"]
 	local buffy = settings["buffs-y"]
 	local buffs = buffx and buffy and (buffx * buffy)
-	
+
 	local debuffx = settings["debuffs-x"]
 	local debuffy = settings["debuffs-y"]
 	local debuffs = debuffx and debuffy and (debuffx * debuffy)
-	
-	
+
+
 	local buffheight = settings["buff-height"] or 16
 --	local buffwidth = settings["initial-width"]
---	buffwidth = buffwidth - (buffwidth%buffheight) -- make sure we have exactly enough room for the buffs	
+--	buffwidth = buffwidth - (buffwidth%buffheight) -- make sure we have exactly enough room for the buffs
 	if not unit or unit == "target" or unit == "focus" then
-		if debuffx and debuffy then	
+		if debuffx and debuffy then
 			local debuffs = CreateFrame("Frame", nil, self)
 			debuffs.size = buffheight
 			debuffs:SetHeight(buffheight * debuffy)
@@ -859,9 +805,9 @@ local function setStyle(settings, self, unit)
 			end -- if unit
 		end -- settings["buffs"]
 	end -- if unit-find
-	
+
 	if not unit or unit:find("partypet%d") then -- range on party, raid and party pets
-		self.Range = true 
+		self.Range = true
 		self.inRangeAlpha = 1.0
 		if grid then
 			self.outsideRangeAlpha = 0.4
@@ -869,7 +815,7 @@ local function setStyle(settings, self, unit)
 			self.outsideRangeAlpha = micro and 0.4 or 0.6
 		end
 	end
-	
+
 	if unit=="target" then
 		self.CPoints = getFontString(self)
 		local font = self.CPoints:GetFont()
@@ -878,7 +824,7 @@ local function setStyle(settings, self, unit)
 		self.CPoints:SetJustifyH("RIGHT")
 	end
 	self.PostCreateAuraIcon = auraIcon
-	
+
 	return self
 end
 
@@ -929,7 +875,7 @@ oUF:RegisterStyle("Ammo_Grid", setmetatable({
 	["debuffs-y"] = 3,
 	["buff-height"]=10,
 	["leader"] = true,
-}, {__call = setStyle})) 
+}, {__call = setStyle}))
 
 -- big UFs
 oUF:SetActiveStyle("Ammo")
@@ -954,7 +900,7 @@ party:SetAttribute("template", "oUF_profalbert_party")
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 10, -50)
 party:SetAttribute("yOffset", -31)
 party:SetAttribute("showParty", true)
---party:SetAttribute("template", oUF_profalbert_party)
+party:SetAttribute("template", oUF_profalbert_party)
 -- do not show in raid
 RegisterStateDriver(party, "visibility", "[group:raid]hide;show")
 party:Show()
@@ -1015,7 +961,7 @@ for i = 1, 8 do
 		grid[i]:SetPoint("TOPLEFT", grid[i-1], "TOPRIGHT", 20, 0)
 	end
 	grid[i]:SetManyAttributes(
---		"template", "oUF_profalbert_raid",
+		"template", "oUF_profalbert_raid",
 		"yOffset", -3,
 		"groupFilter", tostring(i),
 		"showRaid", true,

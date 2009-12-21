@@ -24,45 +24,6 @@
 		</Frames>
 	</Button>
 	<Button name="oUF_profalbert_party" inherits="oUF_profalbert_raid" hidden="true" virtual="true">
-<!--		<Frames>
-			<Button name="$parent_Target" inherits="SecureUnitButtonTemplate">
-				<Scripts>
-					<OnLoad>
-						oUF_profalbert.small(oUF_profalbert.small, self, self.unit)
-					</OnLoad>
-				</Scripts>
-				<Anchors>
-					<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent">
-						<Offset>
-							<AbsDimension x="0" y="3"/>
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Attributes>
-					<Attribute name="unitsuffix" type="string" value="target"/>
-					<Attribute name="unitprefix" type="string" value="party"/>
-					<Attribute name="useparent-unit" type="boolean" value="true"/>
-					<Attribute name="type1" type="string" value="target"/>
-					<Attribute name="initial-unitWatch" type="boolean" value="true"/>
-				</Attributes>
-			</Button>
-			<Button name="$parent_Pet" inherits="SecureUnitButtonTemplate">
-				<Anchors>
-					<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parent">
-						<Offset>
-							<AbsDimension x="0" y="-3"/>
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Attributes>
-					<Attribute name="unitsuffix" type="string" value="pet"/>
-					<Attribute name="unitprefix" type="string" value="party"/>
-					<Attribute name="useparent-unit" type="boolean" value="true"/>
-					<Attribute name="type1" type="string" value="pet"/>
-					<Attribute name="initial-unitWatch" type="boolean" value="true"/>
-				</Attributes>
-			</Button>
-		</Frames>-->
 	</Button>
 </Ui>
 
