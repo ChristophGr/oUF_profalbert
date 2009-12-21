@@ -346,44 +346,6 @@ function updateHealth(self, event, unit, bar, min, max)
 	else
 		formats[unit].health(value, cur, max)
 	end
-	--[[
-	if cur == maxhp then
-		value:SetTextColor(1,1,1)
-		if status and next(status) then
-			if status.aggro then
-				value:SetTextColor(1,0,0)
-				value:SetText("Aggro")
-			elseif status.offline then
-				bar:SetValue(0)
-				value:SetText("Offline")
-			elseif status.afk then
-				value:SetText("AFK")
-			elseif status.dnd then
-				value:SetText("DND")
-			end
-		else
-			formats[unit].health(value, cur, maxhp)
-		end
-	elseif UnitIsDead(unit) then
-		value:SetText("Dead")
-		bar:SetValue(0)
-	elseif UnitIsGhost(unit) then
-		value:SetText("Ghost")
-		bar:SetValue(0)
-	else
-		if status and next(status) then
-			if status.aggro then
-				value:SetTextColor(1,0,0)
-			elseif status.afk then
-				value:SetTextColor(0,0,0)
-			else
-				value:SetTextColor(1,1,1)
-			end
-		else
-			value:SetTextColor(1,1,1)
-		end
-		formats[unit].health(value, cur, maxhp)
-	end--]]
 	self:UNIT_NAME_UPDATE(event, unit)
 end
 
@@ -423,14 +385,12 @@ end
 
 local oldr, oldg, oldb
 local function OnEnter(self)
---	oldr, oldg, oldb =
---	self.Name:SetTextColor(1, 0, 1)
-
+	-- self.Name:SetTextColor(1, 0, 1)
 	UnitFrame_OnEnter(self)
 end
 
 local function OnLeave(self)
---	self.Name:SetTextColor(1, 1, 1)
+	-- updateName(self, nil, self.unit)
 --	if InCombatLockdown() or self.grid then return end
 	UnitFrame_OnLeave()
 end
