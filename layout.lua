@@ -117,8 +117,8 @@ local formats = setmetatable({}, {
 	__index = function(self, key)
 		if type(key) == "nil" then return nil end
 		if not rawget(self, key) then
-			if key:find("raidpet%d") then self[key] = self.raidpet
-			elseif key:find("raidtarget%d") then self[key] = self.raidtarget
+			if key:find("raid%d+pet") then self[key] = self.raidpet
+			elseif key:find("raid%d+target") then self[key] = self.raidtarget
 			elseif key:find("raid%d") then self[key] = self.raid
 			elseif key:find("partypet%d") then self[key] = self.partypet
 			elseif key:find("party%dtarget") then self[key] = self.partytarget
@@ -156,7 +156,8 @@ formats.focustarget.health = fmt_deficit
 formats.focustarget.power = fmt_perc
 
 formats.raid.health = fmt_deficitnomax
-formats.raidtarget.health = fmt_perc
+formats.raidtarget.health = fmt_minonly
+formats.raidtarget.health2 = fmt_perc
 
 local classificationFormats = {
 	worldboss = "%sb",
@@ -642,7 +643,7 @@ local function setStyle(settings, self, unit)
 	self.PreUpdateHealth = updateBarColor
 	self.Health = hp
 
-	if unit == "target" or unit == "targettarget" then
+	if unit == "target" or unit == "targettarget" or unit and unit:match("raid%d+target") then
 		hp.value2 = getFontString(hp)
 		hp.value2:SetFont(bigfont, 9, "THICK")
 		hp.value2:SetTextColor(1,0.3,0.3,1)
