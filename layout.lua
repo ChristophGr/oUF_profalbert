@@ -310,7 +310,7 @@ end
 
 local function Banzai(self, unit, aggro)
 	if not UnitIsPlayer(unit) then return end
-	local status = getStatusByGUID(UnitGUID(unit))
+	local status = unit_status[UnitGUID(unit)]
 	status.aggro = aggro == 1 or nil
 	updateStatusText(self, unit, status)
 end
