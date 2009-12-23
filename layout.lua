@@ -18,12 +18,17 @@ local UnitCreatureType = UnitCreatureType
 local UnitCanAttack = UnitCanAttack
 local GetQuestGreenRange = GetQuestGreenRange
 
+local UnitHealth = _G.UnitHealth
+local UnitHealthMax = _G.UnitHealthMax
+
 local playerClass = select(2, UnitClass("player")) -- combopoints for druid/rogue
 
 local unfiltered = (playerClass == "ROGUE" or playerClass == "WARRIOR")
 
 local LSM = LibStub("LibSharedMedia-3.0")
 local AceTimer = LibStub("AceTimer-3.0")
+local QuickHealth = LibStub("LibQuickHealth-2.0")
+
 local backdrop = {
 		bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", tile = true, tileSize = 16,
 		insets = {left = -1.5, right = -1.5, top = -1.5, bottom = -1.5},
@@ -289,7 +294,7 @@ local function updateStatusText(self, unit, status)
 			end
 		else
 --			formats[unit].health(value, cur, max)
-			updateHealth(self, nil, unit, self.Health, UnitHealth(unit), UnitHealthMax(unit))
+			updateHealth(self, nil, unit, self.Health, cur, max)
 		end
 	else
 		if status and next(status) then
@@ -358,6 +363,24 @@ local function updateHealth2(self, event, unit, bar, min, max)
 		bar.value2:SetText("")
 	end
 	updateHealth(self, event, unit, bar, min, max)
+end
+
+local units = oUF.units
+
+local function quickHealthUpdate(event, unitID, health, healthMax)
+	local uf = units[unitID]
+	local bar = uf.Health
+	bar:SetMinMaxValues(0, healthMax)
+	bar:SetValue(health)
+	updateHealth(uf, event, unitID, bar, health, healthMax)
+end
+
+local function enableQuickHealth()
+	QuickHealth.RegisterCallback(oUF_profalbert, "UnitHealthUpdated", quickHealthUpdate)
+end
+
+local function disableQuickHealth()
+	QuickHealth.UnregisterCallback(oUF_profalbert, "UnitHealthUpdated")
 end
 
 local function updatePower(self, event, unit, bar, min, max)
@@ -999,9 +1022,11 @@ talentUpdateFrame:SetScript("OnEvent", function(self)
 			if playerIsHealer() then
 				party:SetAttribute("showPlayer", true)
 				for i,v in ipairs(pts) do v:Disable()	end
+				enableQuickHealth()
 			else
 				party:SetAttribute("showPlayer", false)
 				for i,v in ipairs(pts) do v:Enable() end
+				disableQuickHealth()
 			end
 		end
 	end)
