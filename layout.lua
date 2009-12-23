@@ -1005,6 +1005,8 @@ partyToggle:SetScript('OnEvent', partyToggleEvent)
 local healtree = {
 	["SHAMAN"] = 3,
 	["PRIEST"] = 2,
+	--["PALADIN"] = 0, -- TODO
+	["DRUID"] = 3,
 }
 
 local function playerIsHealer()
@@ -1012,6 +1014,7 @@ local function playerIsHealer()
 		local _, _, points = GetTalentTabInfo(healtree[playerClass])
 		return points > (UnitLevel("player")/2)
 	end
+	return false
 end
 
 local talentUpdateFrame = CreateFrame("Frame")
