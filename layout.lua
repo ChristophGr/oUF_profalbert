@@ -266,7 +266,7 @@ local unit_status = setmetatable({}, { __index = function(self, key)
 		return val
 	end})
 
--- _G.unit_status = unit_status
+_G.unit_status = unit_status
 
 local updateHealth
 
@@ -861,7 +861,6 @@ party:SetAttribute("template", "oUF_profalbert_party")
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 10, -50)
 party:SetAttribute("yOffset", -31)
 party:SetAttribute("showParty", true)
-party:SetAttribute("template", oUF_profalbert_party)
 -- do not show in raid
 RegisterStateDriver(party, "visibility", "[group:raid]hide;show")
 party:Show()
