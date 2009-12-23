@@ -608,6 +608,7 @@ local function setStyle(settings, self, unit)
 	hp.colorTapping = true
 	hp.colorHealth = true
 	hp.colorSmooth = true
+	hp.colorDisconnected = true
 	-- Healthbar text
 	hp.value = getFontString(hp)
 	if grid then
