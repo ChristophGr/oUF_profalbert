@@ -259,6 +259,11 @@ local function updateName(self, event, unit)
 	if self.Race then
 		self.Race:SetText(smartRace(unit))
 	end
+
+	if self.isHighlighted then
+		self.Name:SetTextColor(1,0,1)
+	end
+
 end
 
 local unit_status = setmetatable({}, { __index = function(self, key)
@@ -408,12 +413,14 @@ end
 
 local oldr, oldg, oldb
 local function OnEnter(self)
-	-- self.Name:SetTextColor(1, 0, 1)
+	self.Name:SetTextColor(1, 0, 1)
+	self.isHighlighted = true
 	UnitFrame_OnEnter(self)
 end
 
 local function OnLeave(self)
-	-- updateName(self, nil, self.unit)
+	self.isHighlighted = false
+	updateName(self, nil, self.unit)
 --	if InCombatLockdown() or self.grid then return end
 	UnitFrame_OnLeave()
 end
