@@ -514,7 +514,6 @@ local function setStyle(settings, self, unit)
 	if grid then
 		self.grid = true
 	end
-	self.namelength = settings["namelength"]
 
 	local hpheight = settings["hpheight"] or 22
 	local ppheight = settings["ppheight"] or 16
@@ -573,13 +572,19 @@ local function setStyle(settings, self, unit)
 		self.Lvl:SetPoint("LEFT", bb, "LEFT", 2, 0)
 	end
 	self.Name = getFontString(bb)
+	self.Name:SetWordWrap(false)
 	if self.Lvl then
 		self.Name:SetPoint("LEFT", self.Lvl, "RIGHT", 2, 0)
 		self:RegisterEvent("UNIT_LEVEL", updateName)
 	else
 		self.Name:SetPoint("LEFT", bb, "LEFT", 2, 0)
 	end
+	self.Name:SetPoint("RIGHT", bb, "RIGHT", 0, 0)
 	self:RegisterEvent("UNIT_NAME_UPDATE", updateName)
+
+	--[[self.Owner = getFontString(bb)
+	self.Owner:SetPoint("BOTTOM", self.Name, "TOP", 0, 1)--]]
+
 	-- Portrait
 	local portrait
 	if settings["portrait"] then
@@ -840,7 +845,6 @@ end
 local default = {
 	["initial-width"] = 140,
 	["initial-height"] = 48,
-	["namelength"] = 20,
 	["hpheight"] = 22,
 	["ppheight"] = 12,
 	["buffs-x"] = 6,
@@ -864,7 +868,6 @@ oUF:RegisterStyle("pa_focus", setmetatable(focus, {__call = setStyle}))
 local small = setmetatable({
 	["initial-width"] = 80,
 	["initial-height"] = 30,
-	["namelength"] = 15,
 	["hpheight"] = 15,
 	["ppheight"] = 3,
 	["debuffs-x"] = 1,
@@ -876,7 +879,6 @@ oUF:RegisterStyle("Ammo_Small", small)
 oUF:RegisterStyle("Ammo_Grid", setmetatable({
 	["initial-width"] = 60,
 	["initial-height"] = 30,
-	["namelength"] = 10,
 	["hpheight"] = 18,
 	["ppheight"] = 3,
 	["ammo-grid"] = true,
