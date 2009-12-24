@@ -237,7 +237,6 @@ local function updateName(self, event, unit)
 		local test, class = UnitClass(owner)
 		if test ~= name then
 			local colors = RAID_CLASS_COLORS[class]
-			print("colors: ", colors.r, colors.g, colors.b)
 			name = ("|cff%02x%02x%02x%s|r's %s"):format(colors.r*256, colors.g*256, colors.b*256, UnitName(owner), name)
 		else
 			name = ("%s's %s"):format(UnitName(owner), name)
