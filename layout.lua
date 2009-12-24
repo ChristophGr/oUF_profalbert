@@ -847,9 +847,9 @@ oUF:RegisterStyle("pa_focus", setmetatable(focus, {__call = setStyle}))
 
 local small = setmetatable({
 	["initial-width"] = 80,
-	["initial-height"] = 35,
+	["initial-height"] = 30,
 	["namelength"] = 15,
-	["hpheight"] = 20,
+	["hpheight"] = 15,
 	["ppheight"] = 3,
 	["debuffs-x"] = 1,
 	["debuffs-y"] = 3,
@@ -1033,11 +1033,13 @@ talentUpdateFrame:SetScript("OnEvent", function(self)
 		if not InCombatLockdown() then
 			if playerIsHealer() then
 				party:SetAttribute("showPlayer", true)
-				for i,v in ipairs(pts) do v:Disable()	end
+				--for i,v in ipairs(pts) do v:Disable()	end
+				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, -81)
 				enableQuickHealth()
 			else
 				party:SetAttribute("showPlayer", false)
-				for i,v in ipairs(pts) do v:Enable() end
+				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
+				--for i,v in ipairs(pts) do v:Enable() end
 				disableQuickHealth()
 			end
 		end
