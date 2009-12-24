@@ -290,7 +290,8 @@ local function updateStatusText(self, unit, status)
 				value:SetTextColor(1,0,0)
 				formats[unit].health(value, cur, max)
 			elseif status.offline then
-				self.Health:SetValue(0)
+				-- self.Health:SetValue(0)
+				self.Health:SetStatusBarColor(0.3, 0.3, 0.3)
 				value:SetText("Offline")
 			elseif status.afk then
 				value:SetText("AFK")
