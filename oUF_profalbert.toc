@@ -2,7 +2,7 @@
 ## Author: profalbert
 ## Title: oUF profalbert
 ## Notes: profalbert style oUF layout
-## OptionalDeps: SharedMedia
+## OptionalDeps: SharedMedia, LibQuickHealth-2.0
 ## RequiredDeps: oUF
 
 portrait2.lua
