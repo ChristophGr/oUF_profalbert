@@ -315,7 +315,7 @@ local function updateStatusText(self, unit, status)
 		end
 	else
 		if status and next(status) then
-			if status.aggro and self.Banzai not unit:match("target") then
+			if status.aggro and self.Banzai and not unit:match("target") then
 				value:SetTextColor(1,0,0)
 			elseif status.afk then
 				value:SetTextColor(0,0,0)
@@ -383,7 +383,7 @@ local function updateHealth2(self, event, unit, bar, min, max)
 end
 
 local units = oUF.units
-
+--[[
 local function quickHealthUpdate(event, unitID, health, healthMax)
 	local uf = units[unitID]
 	local bar = uf.Health
@@ -399,7 +399,7 @@ end
 local function disableQuickHealth()
 	QuickHealth.UnregisterCallback(oUF_profalbert, "UnitHealthUpdated")
 end
-
+--]]
 local function updatePower(self, event, unit, bar, min, max)
 	if max == 0 or UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
 		bar:SetValue(0)
@@ -494,6 +494,21 @@ end
 		end
 	end
 end--]]
+
+local healtree = {
+	["SHAMAN"] = 3,
+	["PRIEST"] = 2,
+	--["PALADIN"] = 0, -- TODO
+	["DRUID"] = 3,
+}
+
+local function playerIsHealer()
+	if healtree[playerClass] then
+		local _, _, points = GetTalentTabInfo(healtree[playerClass])
+		return points > (UnitLevel("player")/2)
+	end
+	return false
+end
 
 local function setStyle(settings, self, unit)
 	self.menu = menu -- Enable the menus
@@ -661,6 +676,35 @@ local function setStyle(settings, self, unit)
 
 		-- optional flag to show overhealing
 		self.allowHealCommOverflow = true
+	end
+
+	-- quickhealth
+	if false and not unit or unit == "player" then
+		local function quickHealthCheck(self)
+			if playerIsHealer() then
+				if not self.quickUpdates then
+					print("enable quickhealth on")
+					local function quickHealthUpdate(self, event, unitID, health, healthMax)
+						print("fast update on ", unitID)
+						local bar = self.Health
+						bar:SetMinMaxValues(0, healthMax)
+						bar:SetValue(health)
+						updateHealth(self, event, unitID, bar, health, healthMax)
+					end
+					self.UnitHealthUpdated = quickHealthUpdate
+					QuickHealth.RegisterCallback(self, "UnitHealthUpdated", "UnitHealthUpdated")
+					self.quickUpdates = true
+				end
+			else
+				if self.quickUpdates then
+					print("disable QuickHealth")
+					QuickHealth.UnregisterCallback(self, "UnitHealthUpdated")
+					self.quickUpdates = false
+				end
+			end
+		end
+		self:RegisterEvent("PLAYER_TALENT_UPDATE", quickHealthCheck)
+		self:RegisterEvent("PLAYER_ALIVE", quickHealthCheck)
 	end
 
 	if unit == "target" or unit == "targettarget" or unit and unit:match("raid%d+target") then
@@ -1035,21 +1079,6 @@ partyToggle:RegisterEvent('PARTY_LEADER_CHANGED')
 partyToggle:RegisterEvent('PARTY_MEMBERS_CHANGED')
 partyToggle:SetScript('OnEvent', partyToggleEvent)
 
-local healtree = {
-	["SHAMAN"] = 3,
-	["PRIEST"] = 2,
-	--["PALADIN"] = 0, -- TODO
-	["DRUID"] = 3,
-}
-
-local function playerIsHealer()
-	if healtree[playerClass] then
-		local _, _, points = GetTalentTabInfo(healtree[playerClass])
-		return points > (UnitLevel("player")/2)
-	end
-	return false
-end
-
 local talentUpdateFrame = CreateFrame("Frame")
 talentUpdateFrame:RegisterEvent("PLAYER_ALIVE")
 talentUpdateFrame:RegisterEvent('PLAYER_LOGIN')
@@ -1060,12 +1089,12 @@ talentUpdateFrame:SetScript("OnEvent", function(self)
 				party:SetAttribute("showPlayer", true)
 				--for i,v in ipairs(pts) do v:Disable()	end
 				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, -81)
-				enableQuickHealth()
+				--enableQuickHealth()
 			else
 				party:SetAttribute("showPlayer", false)
 				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
 				--for i,v in ipairs(pts) do v:Enable() end
-				disableQuickHealth()
+				--disableQuickHealth()
 			end
 		end
 	end)
