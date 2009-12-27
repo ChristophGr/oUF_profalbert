@@ -297,7 +297,7 @@ local function updateStatusText(self, unit, status)
 	if cur == max then
 		value:SetTextColor(1,1,1)
 		if status and next(status) then
-			if status.aggro and self.Banzai then
+			if status.aggro and self.Banzai and not unit:match("target") then
 				value:SetTextColor(1,0,0)
 				formats[unit].health(value, cur, max)
 			elseif status.offline then
@@ -315,7 +315,7 @@ local function updateStatusText(self, unit, status)
 		end
 	else
 		if status and next(status) then
-			if status.aggro and self.Banzai then
+			if status.aggro and self.Banzai not unit:match("target") then
 				value:SetTextColor(1,0,0)
 			elseif status.afk then
 				value:SetTextColor(0,0,0)
