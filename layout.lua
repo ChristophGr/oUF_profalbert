@@ -225,10 +225,6 @@ local function updateName(self, event, unit)
 	if self.unit ~= unit then return end
 
 	local name = UnitName(unit) or ""
-	if self.namelength then
-		name = name:sub(0, self.namelength)
-	end
-
 	if unit:match("pet") then
 		local owner = unit:gsub("pet", "")
 		if owner == "" then
@@ -301,7 +297,7 @@ local function updateStatusText(self, unit, status)
 	if cur == max then
 		value:SetTextColor(1,1,1)
 		if status and next(status) then
-			if status.aggro then
+			if status.aggro and self.Banzai then
 				value:SetTextColor(1,0,0)
 				formats[unit].health(value, cur, max)
 			elseif status.offline then
@@ -319,7 +315,7 @@ local function updateStatusText(self, unit, status)
 		end
 	else
 		if status and next(status) then
-			if status.aggro then
+			if status.aggro and self.Banzai then
 				value:SetTextColor(1,0,0)
 			elseif status.afk then
 				value:SetTextColor(0,0,0)
@@ -654,6 +650,18 @@ local function setStyle(settings, self, unit)
 
 	self.PreUpdateHealth = updateBarColor
 	self.Health = hp
+
+	if not unit or unit == "player" or unit == "target" then
+		self.HealCommBar = CreateFrame('StatusBar', nil, self.Health)
+		self.HealCommBar:SetHeight(0)
+		self.HealCommBar:SetWidth(0)
+		self.HealCommBar:SetStatusBarTexture(self.Health:GetStatusBarTexture():GetTexture())
+		self.HealCommBar:SetStatusBarColor(0, 1, 0, 0.25)
+		self.HealCommBar:SetPoint('LEFT', self.Health, 'LEFT')
+
+		-- optional flag to show overhealing
+		self.allowHealCommOverflow = true
+	end
 
 	if unit == "target" or unit == "targettarget" or unit and unit:match("raid%d+target") then
 		hp.value2 = getFontString(hp)
