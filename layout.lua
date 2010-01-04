@@ -460,20 +460,30 @@ local function OnLeave(self)
 	UnitFrame_OnLeave()
 end
 
-local function getFontString(parent)
-	local fs = parent:CreateFontString(nil, "OVERLAY")
+local function getBoundedHeight(height)
+	if height < 11 then
+		return 11
+	elseif height > 13 then
+		return 13
+	else
+		return height
+	end
+end
+
+local function getFontStringHeight(parent)
 	if parent.GetHeight then
 		local height = parent:GetHeight()
-		if height < 11 then
-			height = 11
-		elseif height > 13 then
-			height = 13
-		end
-		fs:SetFont(defaultfont, height)
+		return getBoundedHeight(height)
 	else
-		fs:SetFont(defaultfont, 10)
+		return 10
 	end
---	fs:SetFontObject(GameFontNormalSmall)
+end
+
+local function getFontString(parent)
+	local fs = parent:CreateFontString(nil, "OVERLAY")
+	local height = getFontStringHeight(parent)
+	
+	fs:SetFont(defaultfont, height)
 	fs:SetShadowColor(0,0,0)
 	fs:SetShadowOffset(0.8, -0.8)
 	fs:SetTextColor(1,1,1)
