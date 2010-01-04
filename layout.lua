@@ -1026,9 +1026,6 @@ party:SetAttribute("showParty", true)
 party:SetAttribute("toggleForVehicle", true)
 -- do not show in raid
 RegisterStateDriver(party, "visibility", "[group:raid]hide;show")
-party:Show()
-
-_G.party = party
 
 -- small UFs
 oUF:SetActiveStyle("Ammo_Small")
@@ -1107,7 +1104,6 @@ for i = 1, 8 do
 		"sortDir", "DESC"
 	)
 	RegisterStateDriver(grid[i], "visibility", "[group:raid]show;hide")
---	grid[i]:Show()
 end
 
 -- MTs and mt-targets
