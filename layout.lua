@@ -319,38 +319,48 @@ local function updateStatusText(self, unit, status)
 	updateName(self, nil, unit)
 	local cur, max = UnitHealth(unit), UnitHealthMax(unit)
 	local value = self.Health.value
-	if cur == max then
-		value:SetTextColor(1,1,1)
-		if status and next(status) then
-			if status.aggro and self.Banzai and not unit:match("target") then
-				value:SetTextColor(1,0,0)
-				formats[unit].health(value, cur, max)
-			elseif status.offline then
-				self.Health:SetStatusBarColor(0.3, 0.3, 0.3)
-				value:SetText("Offline")
-			elseif status.afk then
-				value:SetText("AFK")
-			elseif status.dnd then
-				value:SetText("DND")
-			end
+	if not next(status) then
+		if UnitIsGhost(unit) then
+			value:SetText("Ghost")
+		elseif UnitIsDead(unit) then
+			value:SetText("Dead")
 		else
 			formats[unit].health(value, cur, max)
---			updateHealth(self, nil, unit, self.Health, cur, max)
+		end
+		value:SetTextColor(1,1,1)
+		return
+	end
+	if cur == max then
+		value:SetTextColor(1,1,1)
+		if status.aggro and self.Banzai and not unit:match("target") then
+			value:SetTextColor(1,0,0)
+			formats[unit].health(value, cur, max)
+		elseif status.offline then
+			self.Health:SetStatusBarColor(0.3, 0.3, 0.3)
+			value:SetText("Offline")
+		elseif UnitIsDead(unit) then
+			value:SetText("Dead")
+		elseif UnitIsGhost(unit) then
+			value:SetText("Ghost")
+		elseif status.afk then
+			value:SetText("AFK")
+		elseif status.dnd then
+			value:SetText("DND")
 		end
 	else
-		if status and next(status) then
-			if status.aggro and self.Banzai and not unit:match("target") then
-				value:SetTextColor(1,0,0)
-			elseif status.afk then
-				value:SetTextColor(0,0,0)
-			else
-				value:SetTextColor(1,1,1)
-			end
+		if UnitIsGhost(unit) then
+			value:SetText("Ghost")
+			return
+		elseif UnitIsDead(unit) then
+			value:SetText("Dead")
+			return
+		elseif status.aggro and self.Banzai and not unit:match("target") then
+			value:SetTextColor(1,0,0)
+		elseif status.afk then
+			value:SetTextColor(0,0,0)
 		else
 			value:SetTextColor(1,1,1)
 		end
-		formats[unit].health(value, cur, max)
-		--updateHealth(self, nil, unit, self.Health, UnitHealth(unit), UnitHealthMax(unit))
 	end
 end
 
