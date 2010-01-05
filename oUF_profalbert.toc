@@ -6,5 +6,6 @@
 ## RequiredDeps: oUF
 
 portrait2.lua
+vehicle2.lua
 layout.xml
 layout.lua

@@ -6,7 +6,10 @@
 			</OnLoad>
 		</Scripts>
 	</Button>
-  <Button name="oUF_profalbert_mtt" inherits="oUF_profalbert_raid" hidden="true" virtual="true">
+	<Attributes>
+		<Attribute name="toggleForVehicle" type="boolean" value="true"/>
+	</Attributes>
+  <Button name="oUF_profalbert_mtt" inherits="SecureUnitButtonTemplate" hidden="true" virtual="true">
 		<Frames>
 			<Button name="$parentTarget" inherits="SecureUnitButtonTemplate">
 				<Anchors>

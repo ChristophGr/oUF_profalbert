@@ -4,39 +4,56 @@ _G.oUF_profalbert = oUF_profalbert
 
 -- the local upvalues bandwagon
 local select = select
+
+-- unit-stuff
 local UnitClass = UnitClass
 local UnitIsDead = UnitIsDead
 local UnitIsGhost = UnitIsGhost
 local UnitIsPlayer = UnitIsPlayer
 local UnitIsConnected = UnitIsConnected
-local RAID_CLASS_COLORS = RAID_CLASS_COLORS
 local UnitLevel = UnitLevel
 local UnitPowerType = UnitPowerType
 local UnitClassification = UnitClassification
 local UnitCreatureFamily = UnitCreatureFamily
 local UnitCreatureType = UnitCreatureType
+local UnitRace = _G.UnitRace
 local UnitCanAttack = UnitCanAttack
-local GetQuestGreenRange = GetQuestGreenRange
-
+local UnitReaction = _G.UnitReaction
 local UnitHealth = _G.UnitHealth
 local UnitHealthMax = _G.UnitHealthMax
+local GetQuestGreenRange = GetQuestGreenRange
+local UnitFrame_OnEnter = _G.UnitFrame_OnEnter
+local UnitFrame_OnLeave = _G.UnitFrame_OnLeave
+local ToggleDropDownMenu = _G.ToggleDropDownMenu
+
+local RAID_CLASS_COLORS = RAID_CLASS_COLORS
+local FACTION_BAR_COLORS = _G.FACTION_BAR_COLORS
 
 local playerClass = select(2, UnitClass("player")) -- combopoints for druid/rogue
 
 local unfiltered = (playerClass == "ROGUE" or playerClass == "WARRIOR")
 
+local LibStub = _G.LibStub
 local LSM = LibStub("LibSharedMedia-3.0")
 local AceTimer = LibStub("AceTimer-3.0")
 local QuickHealth = LibStub("LibQuickHealth-2.0")
 
 local backdrop = {
-		bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", tile = true, tileSize = 16,
-		insets = {left = -1.5, right = -1.5, top = -1.5, bottom = -1.5},
-	}
+	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+	tile = true,
+	tileSize = 16,
+	insets = {
+		left = -1.5,
+		right = -1.5,
+		top = -1.5,
+		bottom = -1.5
+	},
+}
 local statusbartexture = LSM:Fetch("statusbar", "Perl v2")
 local bordertexture = "Interface\\AddOns\\oUF_profalbert\\media\\border"
 local defaultfont = LSM:Fetch("font", "Arial Narrow")
 local bigfont = LSM:Fetch("font", "Diablo")
+
 local white = { r = 1, g = 1, b = 1}
 
 local barFormatMinMax = "%s/%s"
@@ -227,21 +244,29 @@ local function updateName(self, event, unit)
 	local name = UnitName(unit) or ""
 	if unit:match("pet") then
 		local owner = unit:gsub("pet", "")
-		if owner == "" then
-			owner = "player"
-		end
-		local test, class = UnitClass(owner)
-		if test ~= name then
+		if owner then
+			if owner == "" then
+				owner = "player"
+			end
+
+			local ownerName = UnitName(owner)
+			if not ownerName then
+				-- yprint(owner)
+				-- print(self:GetName())
+			end
+			local test, class = UnitClass(owner)
 			local colors = RAID_CLASS_COLORS[class]
-			name = ("|cff%02x%02x%02x%s|r's %s"):format(colors.r*256, colors.g*256, colors.b*256, UnitName(owner), name)
-		else
-			name = ("%s's %s"):format(UnitName(owner), name)
+			if colors then
+				local r = math.floor(colors.r * 255)
+				local g = math.floor(colors.g * 255)
+				local b = math.floor(colors.b * 255)
+				name = ("|cff%02x%02x%02x%s|r's %s"):format(r, g, b, UnitName(owner), name)
+			else
+				name = ("%s's %s"):format(UnitName(owner) or "", name)
+			end
 		end
 	end
 
-	if not self.grid and name ~= UnitName(unit) then
-		name = name .. ".."
-	end
 	self.Name:SetText(name)
 	local color = white
 	if UnitIsPlayer(unit) then
@@ -286,12 +311,12 @@ local unit_status = setmetatable({}, { __index = function(self, key)
 		end
 		return val
 	end})
-
 _G.unit_status = unit_status
 
-local updateHealth
 
+local updateHealth
 local function updateStatusText(self, unit, status)
+	updateName(self, nil, unit)
 	local cur, max = UnitHealth(unit), UnitHealthMax(unit)
 	local value = self.Health.value
 	if cur == max then
@@ -301,7 +326,6 @@ local function updateStatusText(self, unit, status)
 				value:SetTextColor(1,0,0)
 				formats[unit].health(value, cur, max)
 			elseif status.offline then
-				-- self.Health:SetValue(0)
 				self.Health:SetStatusBarColor(0.3, 0.3, 0.3)
 				value:SetText("Offline")
 			elseif status.afk then
@@ -310,8 +334,8 @@ local function updateStatusText(self, unit, status)
 				value:SetText("DND")
 			end
 		else
---			formats[unit].health(value, cur, max)
-			updateHealth(self, nil, unit, self.Health, cur, max)
+			formats[unit].health(value, cur, max)
+--			updateHealth(self, nil, unit, self.Health, cur, max)
 		end
 	else
 		if status and next(status) then
@@ -325,7 +349,7 @@ local function updateStatusText(self, unit, status)
 		else
 			value:SetTextColor(1,1,1)
 		end
---		formats[unit].health(value, cur, max)
+		formats[unit].health(value, cur, max)
 		--updateHealth(self, nil, unit, self.Health, UnitHealth(unit), UnitHealthMax(unit))
 	end
 end
@@ -433,7 +457,6 @@ end
 local function OnLeave(self)
 	self.isHighlighted = false
 	updateName(self, nil, self.unit)
---	if InCombatLockdown() or self.grid then return end
 	UnitFrame_OnLeave()
 end
 
@@ -474,26 +497,27 @@ local function updateBarColor(self, event, unit)
 	self.Health.colorReaction = not UnitIsPlayer(unit)
 end
 
---[[local function updateFlags(self)
-	if self.aggro then return end
-	local unit = self.unit
+local function compareUnit(unit, ...)
 	if not unit then return end
---	print("updating ", unit, " flags")
-	local status = getStatusText(unit)
-	if not status then
-		self.Health.value:SetTextColor(1,1,1)
-		updateHealth(self, nil, unit, self.Health, UnitHealth(unit), UnitHealthMax(unit))
-	else
-		if UnitHealth(unit) == UnitHealthMax(unit) then
-			-- replace text
-			self.Health.value:SetTextColor(1,1,1)
-			self.Health.value:SetText(status)
-		elseif status == "AFK" then
-			self.Health.value:SetTextColor(statusColor[status])
-			-- color text
+	for i = 1,select('#', ...) do
+		local check = select(i, ...)
+		if check == unit then
+			return true
 		end
 	end
-end--]]
+	return false
+end
+
+local function matchUnit(unit, ...)
+	if not unit then return end
+	for i = 1,select('#', ...) do
+		local check = select(i, ...)
+		if unit:match(check) then
+			return true
+		end
+	end
+	return false
+end
 
 local healtree = {
 	["SHAMAN"] = 3,
@@ -516,6 +540,40 @@ local function setStyle(settings, self, unit)
 	self:SetAttribute("*type2", "menu")
 	self:SetScript("OnEnter", OnEnter)
 	self:SetScript("OnLeave", OnLeave)
+
+	self:SetAttribute("toggleForVehicle", true)
+	self.disallowVehicleSwap = true
+	if not unit or compareUnit(unit, "player", "pet") or matchUnit(unit, "party%d$", "partypet%d$") then
+		self.VehicleSwap2 = true
+	end
+	-- for party
+	--if not unit then
+		--[=[local function vehicleUpdate(self, event)
+			local modunit = SecureButton_GetModifiedUnit(self)
+			if modunit ~= self.unit then
+				-- if UnitHasVehicleUI(self:GetAttribute("unit")) then
+				self.unit = modunit
+				updateName(self, nil, self.unit)
+				self:UNIT_FACTION(self.unit)
+				--self:UpdateElement("Name")
+				--self:UpdateElement("Health")
+			end
+		end
+		self:SetAttribute("toggleForVehicle", true)
+		self:RegisterEvent("UNIT_ENTERED_VEHICLE", vehicleUpdate)
+		self:RegisterEvent("UNIT_EXITED_VEHICLE", vehicleUpdate)
+		--[[self:RegisterEvent("PLAYER_ALIVE", function(self)
+				print("alive-check")
+				if UnitHasVehicleUI(self.unit) then
+					self.unit = self.unit:gsub("%d+", "pet%1")
+				else
+					self.unit = self.unit:gsub("pet", "")
+				end
+				self:UnRegisterEvent("PLAYER_ALIVE")
+			end)--]]
+--]=]
+	--end
+
 	local width = settings["initial-width"] or 100
 	local height = settings["initial-height"] or 20
 
@@ -534,7 +592,7 @@ local function setStyle(settings, self, unit)
 	self:SetBackdropColor(0,0,0,1)
 
 	-- pet TTL
-	if unit == "pet" then
+	if compareUnit(unit,"pet") then
 		local ttl = getFontString(self)
 		ttl:SetPoint("BOTTOM", self, "TOP")
 		local petupdateFrame = CreateFrame("Frame")
@@ -570,12 +628,8 @@ local function setStyle(settings, self, unit)
 
 	local bb = CreateFrame("StatusBar", nil, self)
 	bb:SetHeight(bbheight)
---	bb.value = getFontString(bb)
---	bb.value:SetPoint("LEFT")
 	bb:SetPoint("TOPLEFT")
 	bb:SetPoint("TOPRIGHT")
---	bb:SetStatusBarColor(255, 100, 100, 255)
---	bb:SetStatusBarTexture(statusbartexture)
 
 	if settings["level"] then
 		self.Lvl = getFontString(bb)
@@ -591,9 +645,6 @@ local function setStyle(settings, self, unit)
 	end
 	self.Name:SetPoint("RIGHT", bb, "RIGHT", 0, 0)
 	self:RegisterEvent("UNIT_NAME_UPDATE", updateName)
-
-	--[[self.Owner = getFontString(bb)
-	self.Owner:SetPoint("BOTTOM", self.Name, "TOP", 0, 1)--]]
 
 	-- Portrait
 	local portrait
@@ -659,13 +710,14 @@ local function setStyle(settings, self, unit)
 		AceTimer:ScheduleRepeatingTimer(updateStatus, 1, self)
 	end
 
---	self:RegisterEvent("PLAYER_FLAGS_CHANGED", function() updateFlags(self) end)
---	local updateFrame = CreateFrame("frame")
---	updateFrame:SetScript("OnUpdate", function() updateFlags(self) end)
-
 	self.PreUpdateHealth = updateBarColor
 	self.Health = hp
 
+	--[[self:RegisterEvent("UNIT_ENTERED_VEHICLE", function(self)
+			--updateHealth(self, nil, self.unit, self.HEALTH, UnitHealth(self.unit), UnitMaxHealth(self.unit))
+			updateName(self.unit, nil, self.unit)
+		end)--]]
+	
 	if not unit or unit == "player" or unit == "target" then
 		self.HealCommBar = CreateFrame('StatusBar', nil, self.Health)
 		self.HealCommBar:SetHeight(0)
@@ -679,41 +731,51 @@ local function setStyle(settings, self, unit)
 	end
 
 	-- quickhealth
-	if false and not unit or unit == "player" then
+	--[[if not unit or unit == "player" then
 		local function quickHealthCheck(self)
+			if not self.UnitHealthUpdated then
+				local function quickHealthUpdate(self, event, unitID, health, healthMax)
+					if self.unit ~= unitID then
+						return
+					end
+					print("fast update on ", unitID)
+					local bar = self.Health
+					bar:SetMinMaxValues(0, healthMax)
+					bar:SetValue(health)
+					updateHealth(self, event, unitID, bar, health, healthMax)
+				end
+				self.UnitHealthUpdated = quickHealthUpdate
+			end
 			if playerIsHealer() then
 				if not self.quickUpdates then
-					print("enable quickhealth on")
-					local function quickHealthUpdate(self, event, unitID, health, healthMax)
-						print("fast update on ", unitID)
-						local bar = self.Health
-						bar:SetMinMaxValues(0, healthMax)
-						bar:SetValue(health)
-						updateHealth(self, event, unitID, bar, health, healthMax)
-					end
-					self.UnitHealthUpdated = quickHealthUpdate
+					print("enable quickhealth on", self.unit)
 					QuickHealth.RegisterCallback(self, "UnitHealthUpdated", "UnitHealthUpdated")
 					self.quickUpdates = true
+				else
+					print("quickupdates were enabled already on ", self.unit)
 				end
 			else
 				if self.quickUpdates then
 					print("disable QuickHealth")
 					QuickHealth.UnregisterCallback(self, "UnitHealthUpdated")
 					self.quickUpdates = false
+				else
+					print("quickupdates were not enabled on ", self.unit)
 				end
 			end
 		end
 		self:RegisterEvent("PLAYER_TALENT_UPDATE", quickHealthCheck)
 		self:RegisterEvent("PLAYER_ALIVE", quickHealthCheck)
-	end
+		self:RegisterEvent("PARTY_MEMBERS_CHANGED", quickHealthCheck)
+		self:RegisterEvent("RAID_ROSTER_UPDATE", quickHealthCheck)
+	end--]]
 
-	if unit == "target" or unit == "targettarget" or unit and unit:match("raid%d+target") then
+	if compareUnit(unit, "target", "targettarget") or matchUnit(unit, "raid%d+target") then
 		hp.value2 = getFontString(hp)
 		hp.value2:SetFont(bigfont, 9, "THICK")
 		hp.value2:SetTextColor(1,0.3,0.3,1)
 		hp.value:SetPoint("RIGHT", hp.value2, "LEFT", 1)
 		hp.value2:SetPoint("RIGHT", hp, "RIGHT", 1)
---		hp.value:SetPoint("RIGHT
 		self.PostUpdateHealth = updateHealth2
 	else
 		self.PostUpdateHealth = updateHealth
@@ -737,7 +799,8 @@ local function setStyle(settings, self, unit)
 		pp:SetPoint("TOP", hp, "BOTTOM")
 
 		if portrait then
-			if unit == "target" then
+			-- display portrait on the other side for the target
+			if compareUnit(unit, "target") then
 				pp:SetPoint("RIGHT", portrait, "LEFT")
 			else
 				pp:SetPoint("LEFT", portrait, "RIGHT")
@@ -745,7 +808,7 @@ local function setStyle(settings, self, unit)
 		end
 
 		pp.colorPower = true
-		if unit == "player" then
+		if compareUnit(unit, "player") then
 			pp.frequentUpdates = true
 		end
 		pp.bg = pp:CreateTexture(nil, "BORDER")
@@ -756,13 +819,14 @@ local function setStyle(settings, self, unit)
 		self.Power = pp
 		self.PostUpdatePower = updatePower
 
-		if ppheight > 5 then -- anything larger than tiny has text on the powerbar
+		-- anything larger than tiny has text on the powerbar
+		if ppheight > 5 then
 			pp.value = getFontString(pp)
 			pp.value:SetPoint("CENTER")
 		end
 	end
-
-	if (not unit or unit == "player") and settings["leader"] then --raid,	party or player gets a leader icon
+	--raid,	party or player gets a leader icon
+	if (not unit or unit == "player") and settings["leader"] then
 		local leader = hp:CreateTexture(nil, "OVERLAY")
 		leader:SetHeight(16)
 		leader:SetWidth(16)
@@ -776,7 +840,6 @@ local function setStyle(settings, self, unit)
 		masterlooter:SetPoint("TOPRIGHT", self, "TOPRIGHT", 8, 8)
 		masterlooter:SetTexture("Interface\\GroupFrame\\UI-Group-MasterLooter")
 		self.MasterLooter = masterlooter
-
 	end
 
 	if unit == "player" then -- player gets resting and combat
@@ -797,7 +860,7 @@ local function setStyle(settings, self, unit)
 	end
 
 	-- player, pet party and partypets get debuff highlighting
-	if not unit or unit == "player" or unit == "pet" or unit:find("partypet%d") then
+	if not unit or compareUnit(unit, "player", "pet") or matchUnit(unit, "party%dpet") then
 		if micro then
 			local dbh = hp:CreateTexture(nil, "OVERLAY")
 			dbh:SetWidth(16)
@@ -806,7 +869,6 @@ local function setStyle(settings, self, unit)
 			dbh:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT")
 
 			dbh:SetTexture(statusbartexture)
---			dbh:SetVertexColor(0,0,0,0) -- set alpha to 0 to hide the texture
 			self.DebuffHighlight = dbh
 			self.DebuffHighlightAlpha = 1
 		else
@@ -815,19 +877,13 @@ local function setStyle(settings, self, unit)
 		self.DebuffHighlightFilter = not unfiltered -- only show debuffs I can cure, if I can cure any
 	end
 
-	self.Banzai = Banzai
---[[
-	if micro then -- micro units (raid) don't color healthbar but the health text
+	if not unit or matchUnit(unit, "party%d$", "raid%d+$") then
 		self.Banzai = Banzai
-	end
-	if unit == "focustarget" then
+	else
 		self.ignoreBanzai = true
 	end
---]]
 
-	if unit and unit:match("target") then
-		self.ignoreBanzai = true
-	end
+
 	local buffx = settings["buffs-x"]
 	local buffy = settings["buffs-y"]
 	local buffs = buffx and buffy and (buffx * buffy)
@@ -836,11 +892,8 @@ local function setStyle(settings, self, unit)
 	local debuffy = settings["debuffs-y"]
 	local debuffs = debuffx and debuffy and (debuffx * debuffy)
 
-
 	local buffheight = settings["buff-height"] or 16
---	local buffwidth = settings["initial-width"]
---	buffwidth = buffwidth - (buffwidth%buffheight) -- make sure we have exactly enough room for the buffs
-	if not unit or unit == "target" or unit == "focus" then
+	if not unit or compareUnit(unit, "target", "focus") then
 		if debuffx and debuffy then
 			local debuffs = CreateFrame("Frame", nil, self)
 			debuffs.size = buffheight
@@ -852,22 +905,20 @@ local function setStyle(settings, self, unit)
 			debuffs["growth-y"] = "DOWN"
 			debuffs.num = debuffx * debuffy
 			self.Debuffs = debuffs
-		end -- settings["debuffs"]
+		end
 		if buffx and buffy then
-			if not unit or unit == "target" or unit == "focus" then
-				local buffs = CreateFrame("Frame", nil, self)
-				buffs.size = buffheight
-				buffs:SetHeight(buffheight * buffy)
-				buffs:SetWidth(buffheight * buffx)
-				buffs:SetPoint("TOPLEFT", self, "BOTTOMLEFT",-1.5, -3)
-				buffs.initialAnchor = "TOPLEFT"
-				buffs["growth-y"] = "DOWN"
-				buffs.num = buffx * buffy
-				if unit and unit:find("focus") then
-					buffs.onlyShowPlayer = true
-				end
-				self.Buffs = buffs
-			end -- if unit
+			local buffs = CreateFrame("Frame", nil, self)
+			buffs.size = buffheight
+			buffs:SetHeight(buffheight * buffy)
+			buffs:SetWidth(buffheight * buffx)
+			buffs:SetPoint("TOPLEFT", self, "BOTTOMLEFT",-1.5, -3)
+			buffs.initialAnchor = "TOPLEFT"
+			buffs["growth-y"] = "DOWN"
+			buffs.num = buffx * buffy
+			if unit and unit:find("focus") then
+				buffs.onlyShowPlayer = true
+			end
+			self.Buffs = buffs
 		end -- settings["buffs"]
 	end -- if unit-find
 
@@ -881,7 +932,7 @@ local function setStyle(settings, self, unit)
 		end
 	end
 
-	if unit=="target" then
+	if unit == "target" then
 		self.CPoints = getFontString(self)
 		local font = self.CPoints:GetFont()
 		self.CPoints:SetPoint("RIGHT", self, "LEFT", -9, 3)
@@ -945,7 +996,7 @@ oUF:SetActiveStyle("Ammo")
 -- player
 local player = oUF:Spawn("player", "oUF_Player")
 player:SetPoint("RIGHT", UIParent, "CENTER", -80, -230)
-
+player:SetAttribute("toggleForVehicle", true)
 -- target
 local target = oUF:Spawn("target", "oUF_Target")
 target:SetPoint("LEFT", UIParent, "CENTER", 80, -230)
@@ -962,12 +1013,12 @@ party:SetAttribute("template", "oUF_profalbert_party")
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 10, -50)
 party:SetAttribute("yOffset", -31)
 party:SetAttribute("showParty", true)
+party:SetAttribute("toggleForVehicle", true)
 -- do not show in raid
 RegisterStateDriver(party, "visibility", "[group:raid]hide;show")
 party:Show()
 
---oUF:RegisterEvent("RAID_ROSTER_UPDATE", updateParty)
---oUF:RegisterEvent("PARTY_MEMBERS_CHANGED", updateParty)
+_G.party = party
 
 -- small UFs
 oUF:SetActiveStyle("Ammo_Small")
@@ -975,6 +1026,7 @@ oUF:SetActiveStyle("Ammo_Small")
 -- pet
 local pet = oUF:Spawn("pet", "oUF_Pet")
 pet:SetPoint("BOTTOMRIGHT", player, "TOPLEFT", -25, -10)
+pet:SetAttribute("toggleForVehicle", true)
 
 -- targetstarget
 local tot = oUF:Spawn("targettarget", "oUF_TargetTarget")
@@ -984,30 +1036,45 @@ tot:SetPoint("BOTTOMLEFT", target, "TOPRIGHT", 25, 10)
 local tof = oUF:Spawn("focustarget", "oUF_Focustarget")
 tof:SetPoint("LEFT", focus, "RIGHT", 25, 0)
 
--- The pet header is being a cunt, this is a better solution
---[[ no pets for now
-local pets = {}
-pets[1] = oUF:Spawn("partypet1", "oUF_PartyPet1")
-pets[1]:SetPoint("TOPRIGHT", party, "TOPRIGHT", 0, -44)
-pets[1]:SetParent(party)
-for i =2, 4 do
-	pets[i] = oUF:Spawn("partypet"..i, "oUF_PartyPet"..i)
-	pets[i]:SetPoint("TOP", pets[i-1], "BOTTOM", 0, -50)
-	pets[i]:SetParent(party)
-end
---]]
-
+local ptcontainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
+RegisterStateDriver(ptcontainer, "visibility", "[group:raid]hide;show")
 local pts = {}
 pts[1] = oUF:Spawn("party1target", "oUF_Party1Target")
 pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
-pts[1]:SetParent(party)
---pts[1]:Disable()
+pts[1]:SetParent(ptcontainer)
 for i =2, 4 do
 	pts[i] = oUF:Spawn("party"..i.."target", "oUF_Party"..i.."Target")
 	pts[i]:SetPoint("TOP", pts[i-1], "BOTTOM", 0, -50)
-	pts[i]:SetParent(party)
---	pts[i]:Disable()
+	pts[i]:SetParent(ptcontainer)
 end
+
+local petcontainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
+RegisterStateDriver(petcontainer, "visibility", "[group:raid]hide;show")
+-- The pet header is being a cunt, this is a better solution
+local pets = {}
+pets[1] = oUF:Spawn("partypet1", "oUF_PartyPet1")
+pets[1]:SetAttribute("toggleForVehicle", true)
+pets[1]:SetPoint("TOP", pts[1], "BOTTOM", 0, -5)
+pets[1]:SetParent(petcontainer)
+pets[1]:SetAttribute("toggleForVehicle", true)
+for i =2, 4 do
+	pets[i] = oUF:Spawn("partypet"..i, "oUF_PartyPet"..i)
+	pets[i]:SetAttribute("toggleForVehicle", true)
+	pets[i]:SetPoint("TOP", pts[i], "BOTTOM", 0, -5)
+	pets[i]:SetParent(petcontainer)
+	pets[i]:SetAttribute("toggleForVehicle", true)
+end
+
+-- bad header-solution...
+--[[local pets	= oUF:Spawn("header", "oUF_pets", "SecureGroupPetHeaderTemplate")
+pets:SetPoint("TOPLEFT", party, "TOPRIGHT", 10, -50)
+pets:SetAttribute("yOffset", -31)
+pets:SetAttribute("showParty", true)
+pets:SetAttribute("toggleForVehicle", true)
+-- party:SetAttribute("unitsuffix", "pet")
+-- do not show in raid
+RegisterStateDriver(pets, "visibility", "[group:raid]hide;show")
+pets:Show()--]]
 
 -- raid frames
 oUF:SetActiveStyle("Ammo_Grid")
@@ -1052,50 +1119,29 @@ mts:Show()
 RuneFrame:ClearAllPoints()
 RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
 
-local partyToggleEvent
-local function partyToggleEvent(self, event)
-	if(InCombatLockdown()) and event ~= "PLAYER_LOGIN" then
-		self:RegisterEvent('PLAYER_REGEN_ENABLED')
---		self:SetScript("OnUpdate", partyToggleEvent)
-	else
-		self:UnregisterEvent('PLAYER_REGEN_ENABLED')
-		if GetNumRaidMembers() > (GetNumPartyMembers() + 1) then
-			 -- if there is a unit in another party, switch to raid mode
-			--party:Hide()
-			--for i,v in ipairs(grid) do v:Show() end
-			for i,v in ipairs(pts) do v:Disable()	end
-		else
-			--party:Show()
-			--for i,v in ipairs(grid) do v:Hide() end
-			for i,v in ipairs(pts) do v:Enable() end
-		end
-	end
-end
-
-local partyToggle = CreateFrame('Frame')
-partyToggle:RegisterEvent('PLAYER_LOGIN')
-partyToggle:RegisterEvent('RAID_ROSTER_UPDATE')
-partyToggle:RegisterEvent('PARTY_LEADER_CHANGED')
-partyToggle:RegisterEvent('PARTY_MEMBERS_CHANGED')
-partyToggle:SetScript('OnEvent', partyToggleEvent)
-
 local talentUpdateFrame = CreateFrame("Frame")
 talentUpdateFrame:RegisterEvent("PLAYER_ALIVE")
 talentUpdateFrame:RegisterEvent('PLAYER_LOGIN')
 talentUpdateFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
 talentUpdateFrame:SetScript("OnEvent", function(self)
+		self:UnregisterEvent("PLAYER_ALIVE")
+		self:UnregisterEvent("PLAYER_LOGIN")
+		self:UnregisterEvent("PLAYER_REGEN_ENABLED")
 		if not InCombatLockdown() then
 			if playerIsHealer() then
 				party:SetAttribute("showPlayer", true)
+				--pets:SetAttribute("showPlayer", true)
 				--for i,v in ipairs(pts) do v:Disable()	end
 				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, -81)
 				--enableQuickHealth()
 			else
 				party:SetAttribute("showPlayer", false)
+				--pets:SetAttribute("showPlayer", false)
 				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
 				--for i,v in ipairs(pts) do v:Enable() end
 				--disableQuickHealth()
 			end
+		else
+			self:RegisterEvent("PLAYER_REGEN_ENABLED")
 		end
 	end)
-
