@@ -31,8 +31,6 @@ local FACTION_BAR_COLORS = _G.FACTION_BAR_COLORS
 
 local playerClass = select(2, UnitClass("player")) -- combopoints for druid/rogue
 
-local unfiltered = (playerClass == "ROGUE" or playerClass == "WARRIOR")
-
 local LibStub = _G.LibStub
 local LSM = LibStub("LibSharedMedia-3.0")
 local AceTimer = LibStub("AceTimer-3.0")
@@ -417,23 +415,7 @@ local function updateHealth2(self, event, unit, bar, min, max)
 end
 
 local units = oUF.units
---[[
-local function quickHealthUpdate(event, unitID, health, healthMax)
-	local uf = units[unitID]
-	local bar = uf.Health
-	bar:SetMinMaxValues(0, healthMax)
-	bar:SetValue(health)
-	updateHealth(uf, event, unitID, bar, health, healthMax)
-end
 
-local function enableQuickHealth()
-	QuickHealth.RegisterCallback(oUF_profalbert, "UnitHealthUpdated", quickHealthUpdate)
-end
-
-local function disableQuickHealth()
-	QuickHealth.UnregisterCallback(oUF_profalbert, "UnitHealthUpdated")
-end
---]]
 local function updatePower(self, event, unit, bar, min, max)
 	if max == 0 or UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
 		bar:SetValue(0)
@@ -566,33 +548,6 @@ local function setStyle(settings, self, unit)
 	if not unit or compareUnit(unit, "player", "pet") or matchUnit(unit, "party%d$", "partypet%d$") then
 		self.VehicleSwap2 = true
 	end
-	-- for party
-	--if not unit then
-		--[=[local function vehicleUpdate(self, event)
-			local modunit = SecureButton_GetModifiedUnit(self)
-			if modunit ~= self.unit then
-				-- if UnitHasVehicleUI(self:GetAttribute("unit")) then
-				self.unit = modunit
-				updateName(self, nil, self.unit)
-				self:UNIT_FACTION(self.unit)
-				--self:UpdateElement("Name")
-				--self:UpdateElement("Health")
-			end
-		end
-		self:SetAttribute("toggleForVehicle", true)
-		self:RegisterEvent("UNIT_ENTERED_VEHICLE", vehicleUpdate)
-		self:RegisterEvent("UNIT_EXITED_VEHICLE", vehicleUpdate)
-		--[[self:RegisterEvent("PLAYER_ALIVE", function(self)
-				print("alive-check")
-				if UnitHasVehicleUI(self.unit) then
-					self.unit = self.unit:gsub("%d+", "pet%1")
-				else
-					self.unit = self.unit:gsub("pet", "")
-				end
-				self:UnRegisterEvent("PLAYER_ALIVE")
-			end)--]]
---]=]
-	--end
 
 	local width = settings["initial-width"] or 100
 	local height = settings["initial-height"] or 20
@@ -732,11 +687,6 @@ local function setStyle(settings, self, unit)
 
 	self.PreUpdateHealth = updateBarColor
 	self.Health = hp
-
-	--[[self:RegisterEvent("UNIT_ENTERED_VEHICLE", function(self)
-			--updateHealth(self, nil, self.unit, self.HEALTH, UnitHealth(self.unit), UnitMaxHealth(self.unit))
-			updateName(self.unit, nil, self.unit)
-		end)--]]
 	
 	if not unit or unit == "player" or unit == "target" then
 		self.HealCommBar = CreateFrame('StatusBar', nil, self.Health)
@@ -749,46 +699,6 @@ local function setStyle(settings, self, unit)
 		-- optional flag to show overhealing
 		self.allowHealCommOverflow = true
 	end
-
-	-- quickhealth
-	--[[if not unit or unit == "player" then
-		local function quickHealthCheck(self)
-			if not self.UnitHealthUpdated then
-				local function quickHealthUpdate(self, event, unitID, health, healthMax)
-					if self.unit ~= unitID then
-						return
-					end
-					print("fast update on ", unitID)
-					local bar = self.Health
-					bar:SetMinMaxValues(0, healthMax)
-					bar:SetValue(health)
-					updateHealth(self, event, unitID, bar, health, healthMax)
-				end
-				self.UnitHealthUpdated = quickHealthUpdate
-			end
-			if playerIsHealer() then
-				if not self.quickUpdates then
-					print("enable quickhealth on", self.unit)
-					QuickHealth.RegisterCallback(self, "UnitHealthUpdated", "UnitHealthUpdated")
-					self.quickUpdates = true
-				else
-					print("quickupdates were enabled already on ", self.unit)
-				end
-			else
-				if self.quickUpdates then
-					print("disable QuickHealth")
-					QuickHealth.UnregisterCallback(self, "UnitHealthUpdated")
-					self.quickUpdates = false
-				else
-					print("quickupdates were not enabled on ", self.unit)
-				end
-			end
-		end
-		self:RegisterEvent("PLAYER_TALENT_UPDATE", quickHealthCheck)
-		self:RegisterEvent("PLAYER_ALIVE", quickHealthCheck)
-		self:RegisterEvent("PARTY_MEMBERS_CHANGED", quickHealthCheck)
-		self:RegisterEvent("RAID_ROSTER_UPDATE", quickHealthCheck)
-	end--]]
 
 	if compareUnit(unit, "target", "targettarget") or matchUnit(unit, "raid%d+target") then
 		hp.value2 = getFontString(hp)
@@ -894,6 +804,7 @@ local function setStyle(settings, self, unit)
 		else
 			self.DebuffHighlightBackdrop = true -- oUF_DebuffHighlight Support, using the backdrop
 		end
+		local unfiltered = (playerClass == "ROGUE" or playerClass == "WARRIOR")
 		self.DebuffHighlightFilter = not unfiltered -- only show debuffs I can cure, if I can cure any
 	end
 
@@ -1034,10 +945,8 @@ party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 10, -50)
 party:SetAttribute("yOffset", -31)
 party:SetAttribute("showParty", true)
 party:SetAttribute("toggleForVehicle", true)
--- do not show in raid
 RegisterStateDriver(party, "visibility", "[group:raid]hide;show")
 
--- small UFs
 oUF:SetActiveStyle("Ammo_Small")
 
 -- pet
@@ -1082,17 +991,6 @@ for i =2, 4 do
 	pets[i]:SetAttribute("toggleForVehicle", true)
 end
 
--- bad header-solution...
---[[local pets	= oUF:Spawn("header", "oUF_pets", "SecureGroupPetHeaderTemplate")
-pets:SetPoint("TOPLEFT", party, "TOPRIGHT", 10, -50)
-pets:SetAttribute("yOffset", -31)
-pets:SetAttribute("showParty", true)
-pets:SetAttribute("toggleForVehicle", true)
--- party:SetAttribute("unitsuffix", "pet")
--- do not show in raid
-RegisterStateDriver(pets, "visibility", "[group:raid]hide;show")
-pets:Show()--]]
-
 -- raid frames
 oUF:SetActiveStyle("Ammo_Grid")
 local grid = {}
@@ -1110,8 +1008,7 @@ for i = 1, 8 do
 		"yOffset", -3,
 		"groupFilter", tostring(i),
 		"showRaid", true,
-		"point", "TOP",
-		"sortDir", "DESC"
+		"point", "TOP"
 	)
 	RegisterStateDriver(grid[i], "visibility", "[group:raid]show;hide")
 end
@@ -1119,15 +1016,14 @@ end
 -- MTs and mt-targets
 oUF:SetActiveStyle("Ammo_Small")
 local mts = oUF:Spawn("header", "oUF_MTs")
---mts:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -275)
 mts:SetPoint("TOPLEFT", grid[6], "BOTTOMLEFT", 0, -30)
 mts:SetManyAttributes(
-"template", "oUF_profalbert_mtt",
-"showRaid", true,
-"yOffset", 1,
-"groupBy", "ROLE",
-"groupFilter", "MAINTANK",
-"groupingOrder", "1,2,3,4,5,6,7,8"
+	"template", "oUF_profalbert_mtt",
+	"showRaid", true,
+	"yOffset", 1,
+	"groupBy", "ROLE",
+	"groupFilter", "MAINTANK",
+	"groupingOrder", "1,2,3,4,5,6,7,8"
 )
 mts:Show()
 
@@ -1139,23 +1035,17 @@ local talentUpdateFrame = CreateFrame("Frame")
 talentUpdateFrame:RegisterEvent("PLAYER_ALIVE")
 talentUpdateFrame:RegisterEvent('PLAYER_LOGIN')
 talentUpdateFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
-talentUpdateFrame:SetScript("OnEvent", function(self)
-		self:UnregisterEvent("PLAYER_ALIVE")
-		self:UnregisterEvent("PLAYER_LOGIN")
-		self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+talentUpdateFrame:SetScript("OnEvent", function(self, event)
+		if event ~= "PLAYER_TALENT_UPDATE" then
+			self:UnregisterEvent(event)
+		end
 		if not InCombatLockdown() then
 			if playerIsHealer() then
 				party:SetAttribute("showPlayer", true)
-				--pets:SetAttribute("showPlayer", true)
-				--for i,v in ipairs(pts) do v:Disable()	end
 				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, -81)
-				--enableQuickHealth()
 			else
 				party:SetAttribute("showPlayer", false)
-				--pets:SetAttribute("showPlayer", false)
 				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
-				--for i,v in ipairs(pts) do v:Enable() end
-				--disableQuickHealth()
 			end
 		else
 			self:RegisterEvent("PLAYER_REGEN_ENABLED")
