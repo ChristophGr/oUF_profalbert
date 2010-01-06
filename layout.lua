@@ -530,8 +530,11 @@ local healtree = {
 
 local function playerIsHealer()
 	if healtree[playerClass] then
-		local _, _, points = GetTalentTabInfo(healtree[playerClass])
-		return points > (UnitLevel("player")/2)
+		local name, _, points = GetTalentTabInfo(healtree[playerClass])
+		if name then
+			oUF_profalbert_healer = points > (UnitLevel("player")/2)
+		end
+		return oUF_profalbert_healer
 	end
 	return false
 end

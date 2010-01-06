@@ -4,6 +4,7 @@
 ## Notes: profalbert style oUF layout
 ## OptionalDeps: SharedMedia, LibQuickHealth-2.0
 ## RequiredDeps: oUF
+## SavedVarialbes: oUF_profalbert_healer
 
 portrait2.lua
 vehicle2.lua
