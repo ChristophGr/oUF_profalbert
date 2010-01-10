@@ -620,7 +620,7 @@ local function setStyle(settings, self, unit)
 			if not status or not next(status) and not UnitIsDeadOrGhost(unit) then
 				health(value, min, max)
 			else
-				updateStatus(self)
+				--updateStatus(self)
 			end
 		elseif UnitIsDead(unit) then
 			value:SetText("Dead")
