@@ -436,24 +436,6 @@ local function matchUnit(unit, ...)
 	return false
 end
 
-local healtree = {
-	["SHAMAN"] = 3,
-	["PRIEST"] = 2,
-	--["PALADIN"] = 0, -- TODO
-	["DRUID"] = 3,
-}
-
-local function playerIsHealer()
-	if healtree[playerClass] then
-		local name, _, points = GetTalentTabInfo(healtree[playerClass])
-		if name then
-			oUF_profalbert_healer = points > (UnitLevel("player")/2)
-		end
-		return oUF_profalbert_healer
-	end
-	return false
-end
-
 local function setStyle(settings, self, unit)
 	self.menu = menu -- Enable the menus
 	self:RegisterForClicks("anyup")
@@ -469,12 +451,6 @@ local function setStyle(settings, self, unit)
 
 	local width = settings["initial-width"] or 100
 	local height = settings["initial-height"] or 20
-
-	local grid = settings["ammo-grid"]
-
-	if grid then
-		self.grid = true
-	end
 
 	local hpheight = settings["hpheight"] or 22
 	local ppheight = settings["ppheight"] or 16
@@ -542,20 +518,19 @@ local function setStyle(settings, self, unit)
 	-- Portrait
 	local portrait
 	if settings["portrait"] then
-			portrait = CreateFrame("PlayerModel", nil, self)
-			portrait:SetBackdropColor(0, 0, 0, .7)
-			portrait:SetWidth(hpheight + ppheight)
-			portrait:SetHeight(hpheight + ppheight)
-			if unit == "target" then
-				portrait:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 0)
-			else
-				portrait:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0)
-			end
-			local fallback = portrait:CreateTexture()
-			fallback:SetAllPoints(portrait)
-			portrait.fallback = fallback
-			self.Portrait2 = portrait
-
+		portrait = CreateFrame("PlayerModel", nil, self)
+		portrait:SetBackdropColor(0, 0, 0, .7)
+		portrait:SetWidth(hpheight + ppheight)
+		portrait:SetHeight(hpheight + ppheight)
+		if settings["portrait"] == "right" then
+			portrait:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 0, 0)
+		else
+			portrait:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0)
+		end
+		local fallback = portrait:CreateTexture()
+		fallback:SetAllPoints(portrait)
+		portrait.fallback = fallback
+		self.Portrait2 = portrait
 	end
 
 	-- Healthbar
@@ -806,11 +781,7 @@ local function setStyle(settings, self, unit)
 	if not unit or unit:find("partypet%d") then -- range on party, raid and party pets
 		self.Range = true
 		self.inRangeAlpha = 1.0
-		if grid then
-			self.outsideRangeAlpha = 0.4
-		else
-			self.outsideRangeAlpha = micro and 0.4 or 0.6
-		end
+		self.outsideRangeAlpha = 0.6
 	end
 
 	if unit == "target" then
