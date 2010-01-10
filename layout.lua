@@ -269,9 +269,7 @@ local function updateStatusText(self, unit, status)
 		elseif UnitIsDead(unit) then
 			value:SetText("Dead")
 		else
-			--formats[unit].health(value, cur, max)
-			self:UpdateElement("Health")
-			--self.fmt_health(value, cur, max)
+			self.healthfunc(value, cur, max)
 		end
 		value:SetTextColor(1,1,1)
 		return
@@ -280,9 +278,7 @@ local function updateStatusText(self, unit, status)
 		value:SetTextColor(1,1,1)
 		if status.aggro and self.Banzai and not unit:match("target") then
 			value:SetTextColor(1,0,0)
-			--formats[unit].health(value, cur, max)
-			--self.fmt_health(value, cur, max)
-			self:UpdateElement("Health")
+			self.healthfunc(value, cur, max)
 		elseif status.offline then
 			self.Health:SetStatusBarColor(0.3, 0.3, 0.3)
 			value:SetText("Offline")
@@ -596,7 +592,8 @@ local function setStyle(settings, self, unit)
 
 	local health = settings["health"]
 	local health2 = settings["health2"]
-
+	
+	
 	--XXX remove
 	if not health then
 		print(self:GetName(), " has no health")
@@ -611,6 +608,9 @@ local function setStyle(settings, self, unit)
 	else
 		health2 = function() end
 	end
+	self.healthfunc = health
+	self.healthfunc2 = health2
+	
 
 	local function updateHealth(self, event, unit, bar, min, max)
 		local status = unit_status[UnitGUID(unit)]
@@ -619,7 +619,8 @@ local function setStyle(settings, self, unit)
 			if not status or not next(status) and not UnitIsDeadOrGhost(unit) then
 				health(value, min, max)
 				health2(bar.value2, min, max)
-			elseif event ~= "UpdateElement" then -- to prevent 
+			--elseif event ~= "UpdateElement" then -- to prevent 
+			else
 				updateStatus(self)
 				health2(bar.value2, min, max)
 			end
