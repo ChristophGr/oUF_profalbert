@@ -615,21 +615,29 @@ local function setStyle(settings, self, unit)
 	local function updateHealth(self, event, unit, bar, min, max)
 		local status = unit_status[UnitGUID(unit)]
 		local value = bar.value
-		health2(bar.value2, min, max)
 		if min == max then
 			if not status or not next(status) and not UnitIsDeadOrGhost(unit) then
 				health(value, min, max)
-			else
-				--updateStatus(self)
+				health2(bar.value2, min, max)
+			elseif event ~= "UpdateElement" then -- to prevent 
+				updateStatus(self)
+				health2(bar.value2, min, max)
 			end
 		elseif UnitIsDead(unit) then
 			value:SetText("Dead")
 			bar:SetValue(0)
+			if bar.value2 then
+				bar.value2:SetText("")
+			end
 		elseif UnitIsGhost(unit) then
 			value:SetText("Ghost")
 			bar:SetValue(0)
+			if bar.value2 then
+				bar.value2:SetText("")
+			end
 		else
 			health(value, min, max)
+			health2(bar.value2, min, max)
 		end
 		self:UNIT_NAME_UPDATE(event, unit)
 	end
