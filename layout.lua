@@ -125,60 +125,6 @@ local function fmt_minonly(txt, min)
   txt:SetFormattedText(barFormatDeficitNoMax, shortnumber(min))
 end
 
-local fmtmeta = { __index = function(self, key)
-	if type(key) == "nil" then return nil end
-	if not rawget(self, key) then
-		rawset(self, key, fmt_standard)
-		return self[key]
-	end
-end}
-
-local formats = setmetatable({}, {
-	__index = function(self, key)
-		if type(key) == "nil" then return nil end
-		if not rawget(self, key) then
-			if key:find("raid%d+pet") then self[key] = self.raidpet
-			elseif key:find("raid%d+target") then self[key] = self.raidtarget
-			elseif key:find("raid%d") then self[key] = self.raid
-			elseif key:find("partypet%d") then self[key] = self.partypet
-			elseif key:find("party%dtarget") then self[key] = self.partytarget
-			elseif key:find("party%d") then self[key] = self.party
-			else
-				self[key] = {}
-			end
-		end
-		return self[key]
-	end,
-	__newindex = function(self, key, value)
-		rawset(self, key, setmetatable(value, fmtmeta))
-	end,
-})
-
-formats.player.health = fmt_minmax
-formats.pet.health = fmt_minmax
-formats.party.health = fmt_full
-
-formats.target.health = fmt_minmax
-formats.target.health2 = fmt_perc
-formats.target.power = fmt_minmax
-
-formats.focus.health = fmt_minmax
-formats.focus.power = fmt_minmax
-
-formats.partypet.health = fmt_deficit
-formats.partytarget.health = fmt_perc
-
-formats.targettarget.health = fmt_minonly
-formats.targettarget.health2 = fmt_perc
-formats.targettarget.power = fmt_perc
-
-formats.focustarget.health = fmt_deficit
-formats.focustarget.power = fmt_perc
-
-formats.raid.health = fmt_deficitnomax
-formats.raidtarget.health = fmt_minonly
-formats.raidtarget.health2 = fmt_perc
-
 local classificationFormats = {
 	worldboss = "%sb",
 	rareelite = "%s+r",
@@ -323,7 +269,9 @@ local function updateStatusText(self, unit, status)
 		elseif UnitIsDead(unit) then
 			value:SetText("Dead")
 		else
-			formats[unit].health(value, cur, max)
+			--formats[unit].health(value, cur, max)
+			self:UpdateElement("Health")
+			--self.fmt_health(value, cur, max)
 		end
 		value:SetTextColor(1,1,1)
 		return
@@ -332,7 +280,9 @@ local function updateStatusText(self, unit, status)
 		value:SetTextColor(1,1,1)
 		if status.aggro and self.Banzai and not unit:match("target") then
 			value:SetTextColor(1,0,0)
-			formats[unit].health(value, cur, max)
+			--formats[unit].health(value, cur, max)
+			--self.fmt_health(value, cur, max)
+			self:UpdateElement("Health")
 		elseif status.offline then
 			self.Health:SetStatusBarColor(0.3, 0.3, 0.3)
 			value:SetText("Offline")
@@ -379,42 +329,7 @@ local function updateStatus(self)
 	updateStatusText(self, unit, status)
 end
 
-function updateHealth(self, event, unit, bar, min, max)
-	local cur, maxhp
-	cur, maxhp = min, max
-
-	local status = unit_status[UnitGUID(unit)] --getStatusByGUID(UnitGUID(unit))
-	local value = bar.value
-	if cur == max then
-		if not status or not next(status) and not UnitIsDeadOrGhost(unit) then
-			formats[unit].health(value, cur, max)
-		else
-			updateStatus(self)
-		end
-	elseif UnitIsDead(unit) then
-		value:SetText("Dead")
-		bar:SetValue(0)
-	elseif UnitIsGhost(unit) then
-		value:SetText("Ghost")
-		bar:SetValue(0)
-	else
-		formats[unit].health(value, cur, max)
-	end
-	self:UNIT_NAME_UPDATE(event, unit)
-end
-
 oUF_profalbert.updateStatus = updateStatus
-
-local function updateHealth2(self, event, unit, bar, min, max)
-	if min and max and not UnitIsDead(unit) and not UnitIsGhost(unit) and UnitIsConnected(unit) then
-		formats[unit].health2(bar.value2, min, max)
-	else
-		bar.value2:SetText("")
-	end
-	updateHealth(self, event, unit, bar, min, max)
-end
-
-local units = oUF.units
 
 local function updatePower(self, event, unit, bar, min, max)
 	if max == 0 or UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
@@ -423,7 +338,7 @@ local function updatePower(self, event, unit, bar, min, max)
 			bar.value:SetText()
 		end
 	elseif bar.value then
-		formats[unit].power(bar.value, min, max)
+		fmt_standard(bar.value, min, max)
 	end
 end
 
@@ -679,11 +594,12 @@ local function setStyle(settings, self, unit)
 	hp.colorDisconnected = true
 	-- Healthbar text
 	hp.value = getFontString(hp)
-	if grid then
+	--[[if grid then
 		hp.value:SetPoint("TOP", 0, -2)
 	else
 		hp.value:SetPoint("RIGHT", -2, 0)
-	end
+	end--]]
+	hp.value:SetPoint("CENTER")
 	if unit and (unit == "player" or unit:match("party%d$") or unit:match("raid%d+$")) then
 		AceTimer:ScheduleRepeatingTimer(updateStatus, 1, self)
 	end
@@ -703,16 +619,47 @@ local function setStyle(settings, self, unit)
 		self.allowHealCommOverflow = true
 	end
 
-	if compareUnit(unit, "target", "targettarget") or matchUnit(unit, "raid%d+target") then
+	local health = settings["health"]
+	local health2 = settings["health2"]
+
+	--XXX remove
+	if not health then
+		print(self:GetName(), " has no health")
+	end
+	
+	if health2 then
 		hp.value2 = getFontString(hp)
-		hp.value2:SetFont(bigfont, 9, "THICK")
+		hp.value2:SetFont(defaultfont, 11)
 		hp.value2:SetTextColor(1,0.3,0.3,1)
 		hp.value:SetPoint("RIGHT", hp.value2, "LEFT", 1)
 		hp.value2:SetPoint("RIGHT", hp, "RIGHT", 1)
-		self.PostUpdateHealth = updateHealth2
 	else
-		self.PostUpdateHealth = updateHealth
+		health2 = function() end
 	end
+
+	local function updateHealth(self, event, unit, bar, min, max)
+		local status = unit_status[UnitGUID(unit)]
+		local value = bar.value
+		health2(bar.value2, min, max)
+		if min == max then
+			if not status or not next(status) and not UnitIsDeadOrGhost(unit) then
+				health(value, min, max)
+			else
+				updateStatus(self)
+			end
+		elseif UnitIsDead(unit) then
+			value:SetText("Dead")
+			bar:SetValue(0)
+		elseif UnitIsGhost(unit) then
+			value:SetText("Ghost")
+			bar:SetValue(0)
+		else
+			health(value, min, max)
+		end
+		self:UNIT_NAME_UPDATE(event, unit)
+	end
+
+	self.PostUpdateHealth = updateHealth
 
 	local icon = hp:CreateTexture(nil, "OVERLAY")
 	icon:SetHeight(16)
@@ -878,95 +825,181 @@ local function setStyle(settings, self, unit)
 	return self
 end
 
+local function merge2(result, tab1, ...)
+	if not tab1 then
+		return result
+	end
+	for k,v in pairs(tab1) do
+		result[k] = v
+		tab1[k] = nil
+	end
+	tab1 = nil
+	return merge2(result, ...)
+end
+
+local function merge(default, ...)
+	local result = CopyTable(default)
+	return merge2(result, ...)
+end
+
+local stylemeta = {
+	__call = setStyle,
+}
+
+local function newStyle(stylename, table)
+	local style = setmetatable(table, stylemeta)
+	oUF:RegisterStyle("pa_" .. stylename, style)
+end
+
 local default = {
 	["initial-width"] = 140,
 	["initial-height"] = 48,
 	["hpheight"] = 22,
 	["ppheight"] = 12,
+	["level"] = true,
+	["leader"] = true,
+	["buff-height"] = 16,
+	["health"] = fmt_standard,
+	--["health2"] = fmt_perc,
+}
+
+local player = {
+	portrait = "left",
+}
+player = merge(default, player)
+newStyle("player",player)
+
+local target = {
+	portrait = "right",
+	health2 = fmt_perc,
 	["buffs-x"] = 6,
 	["buffs-y"] = 1,
 	["debuffs-x"] = 2,
 	["debuffs-y"] = 3,
-	["portrait"] = true,
-	["level"] = true,
-	["leader"] = true,
-	["buff-height"] = 16,
 }
+target = merge(default, target)
+newStyle("target", target)
 
-local focus = CopyTable(default)
-focus["initial-width"] = 106
-focus["portrait"] = false
+local focus2 = {
+	["initial-width"] = 90,
+	["initial-height"] = 35,
+	["buffs-x"] = 6,
+	["buffs-y"] = 1,
+	hpheight = 18,
+	ppheight = 4,
+}
+focus2 = merge(default, focus2)
+newStyle("focus", focus2)
 
-oUF:RegisterStyle("Ammo", setmetatable(default, {__call = setStyle}))
+local party = {
+	vehicleSwap = true,
+	portrait = "left",
+	["buffs-x"] = 6,
+	["buffs-y"] = 1,
+	["debuffs-x"] = 2,
+	["debuffs-y"] = 3,
+	["health"] = fmt_full,
+}
+party = merge(default, party)
+newStyle("party", party)
 
-oUF:RegisterStyle("pa_focus", setmetatable(focus, {__call = setStyle}))
-
-local small = setmetatable({
+local small = {
 	["initial-width"] = 80,
 	["initial-height"] = 30,
 	["hpheight"] = 15,
 	["ppheight"] = 3,
 	["debuffs-x"] = 1,
 	["debuffs-y"] = 3,
-}, {__call = setStyle})
-oUF_profalbert.small = small
-oUF:RegisterStyle("Ammo_Small", small)
+}
 
-oUF:RegisterStyle("Ammo_Grid", setmetatable({
+local pet = {
+	health = fmt_standard,
+}
+pet = merge(small, pet)
+newStyle("pet", pet)
+
+local targettarget = {
+	health = fmt_minonly,
+	health2 = fmt_perc,
+}
+targettarget = merge(small, targettarget)
+newStyle("tot", targettarget)
+
+local partypet = {
+	["health"] = fmt_standard,
+}
+partypet = merge(small, partypet)
+newStyle("partypet", partypet)
+_G.partypet = partypet
+
+local mts = {
+	--["initial-width"] = 80,
+	["debuffs-y"] = 2,
+	["health"] = fmt_minonly,
+	["health2"] = fmt_perc,
+}
+mts = merge(small, mts)
+newStyle("mts", mts)
+
+local raid = {
 	["initial-width"] = 60,
 	["initial-height"] = 30,
 	["hpheight"] = 18,
 	["ppheight"] = 3,
-	["ammo-grid"] = true,
 	["debuffs-x"] = 1,
 	["debuffs-y"] = 3,
-	["buff-height"]=10,
+	["buff-height"] = 10,
 	["leader"] = true,
-}, {__call = setStyle}))
-
--- big UFs
-oUF:SetActiveStyle("Ammo")
+	["health"] = fmt_deficitnomax,
+}
+newStyle("raid", raid)
 
 -- player
+oUF:SetActiveStyle("pa_player")
 local player = oUF:Spawn("player", "oUF_Player")
 player:SetPoint("RIGHT", UIParent, "CENTER", -80, -230)
 player:SetAttribute("toggleForVehicle", true)
+
 -- target
+oUF:SetActiveStyle("pa_target")
 local target = oUF:Spawn("target", "oUF_Target")
 target:SetPoint("LEFT", UIParent, "CENTER", 80, -230)
 
-oUF:SetActiveStyle("pa_focus")
 -- focus
+oUF:SetActiveStyle("pa_focus")
 local focus = oUF:Spawn("focus", "oUF_Focus")
 focus:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 320, -240)
 
-oUF:SetActiveStyle("Ammo")
+oUF:SetActiveStyle("pa_party")
 -- group
 local party	= oUF:Spawn("header", "oUF_Party")
 party:SetAttribute("template", "oUF_profalbert_party")
 party:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 10, -50)
 party:SetAttribute("yOffset", -31)
 party:SetAttribute("showParty", true)
+party:SetAttribute("showPlayer", true)
 party:SetAttribute("toggleForVehicle", true)
 RegisterStateDriver(party, "visibility", "[group:raid]hide;show")
 
-oUF:SetActiveStyle("Ammo_Small")
-
 -- pet
+oUF:SetActiveStyle("pa_pet")
 local pet = oUF:Spawn("pet", "oUF_Pet")
 pet:SetPoint("BOTTOMRIGHT", player, "TOPLEFT", -25, -10)
 pet:SetAttribute("toggleForVehicle", true)
 
+oUF:SetActiveStyle("pa_tot")
 -- targetstarget
 local tot = oUF:Spawn("targettarget", "oUF_TargetTarget")
 tot:SetPoint("BOTTOMLEFT", target, "TOPRIGHT", 25, 10)
 
--- focustarget
+-- focustarget using pa_tot
 local tof = oUF:Spawn("focustarget", "oUF_Focustarget")
 tof:SetPoint("LEFT", focus, "RIGHT", 25, 0)
 
+-- contain the party-targets in a frame
 local ptcontainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
 RegisterStateDriver(ptcontainer, "visibility", "[group:raid]hide;show")
+oUF:SetActiveStyle("pa_tot")
 local pts = {}
 pts[1] = oUF:Spawn("party1target", "oUF_Party1Target")
 pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
@@ -980,6 +1013,7 @@ end
 local petcontainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
 RegisterStateDriver(petcontainer, "visibility", "[group:raid]hide;show")
 -- The pet header is being a cunt, this is a better solution
+oUF:SetActiveStyle("pa_partypet")
 local pets = {}
 pets[1] = oUF:Spawn("partypet1", "oUF_PartyPet1")
 pets[1]:SetAttribute("toggleForVehicle", true)
@@ -995,7 +1029,7 @@ for i =2, 4 do
 end
 
 -- raid frames
-oUF:SetActiveStyle("Ammo_Grid")
+oUF:SetActiveStyle("pa_raid")
 local grid = {}
 for i = 1, 8 do
 	grid[i] = oUF:Spawn("header", "oUF_Grid"..i)
@@ -1017,7 +1051,7 @@ for i = 1, 8 do
 end
 
 -- MTs and mt-targets
-oUF:SetActiveStyle("Ammo_Small")
+oUF:SetActiveStyle("pa_mts")
 local mts = oUF:Spawn("header", "oUF_MTs")
 mts:SetPoint("TOPLEFT", grid[6], "BOTTOMLEFT", 0, -30)
 mts:SetManyAttributes(
@@ -1028,11 +1062,46 @@ mts:SetManyAttributes(
 	"groupFilter", "MAINTANK",
 	"groupingOrder", "1,2,3,4,5,6,7,8"
 )
-mts:Show()
+RegisterStateDriver(mts, "visibility", "[group:raid]show;hide")
 
 -- move the RuneFrame somewhere sane
 RuneFrame:ClearAllPoints()
 RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
+
+local healtree = {
+	["SHAMAN"] = 3,
+	["PRIEST"] = 2,
+	--["PALADIN"] = 0, -- TODO
+	["DRUID"] = 3,
+}
+
+-- 0 there is no healspec
+-- 1 or 2 -> the healspec
+-- 3 both are healspecs
+local function getHealSpec()
+	local result = 0
+	local name, _, points = GetTalentTabInfo(healtree[playerClass], nil, nil, 1)
+	if not name then return end
+	local _, _, points2 = GetTalentTabInfo(healtree[playerClass], nil, nil, 2)
+	if points > (UnitLevel("player")/2) then
+		result = 1
+	end
+	if points2 > (UnitLevel("player")/2) then
+		result = result + 2
+	end
+	return result
+end
+
+local function playerIsHealer()
+	if healtree[playerClass] then
+		local name, _, points = GetTalentTabInfo(healtree[playerClass])
+		if name then
+			oUF_profalbert_healer = points > (UnitLevel("player")/2)
+		end
+		return oUF_profalbert_healer
+	end
+	return false
+end
 
 local talentUpdateFrame = CreateFrame("Frame")
 talentUpdateFrame:RegisterEvent("PLAYER_ALIVE")
