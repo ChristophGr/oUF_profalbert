@@ -782,6 +782,11 @@ local function setStyle(settings, self, unit)
 		self.Range = true
 		self.inRangeAlpha = 1.0
 		self.outsideRangeAlpha = 0.6
+		--[[if grid then
+			self.outsideRangeAlpha = 0.4
+		else
+			self.outsideRangeAlpha = micro and 0.4 or 0.6
+		end--]]
 	end
 
 	if unit == "target" then
@@ -970,11 +975,13 @@ tof:SetPoint("LEFT", focus, "RIGHT", 25, 0)
 -- contain the party-targets in a frame
 local ptcontainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
 RegisterStateDriver(ptcontainer, "visibility", "[group:raid]hide;show")
+ptcontainer:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
 oUF:SetActiveStyle("pa_tot")
 local pts = {}
 pts[1] = oUF:Spawn("party1target", "oUF_Party1Target")
-pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
+--pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
 pts[1]:SetParent(ptcontainer)
+pts[1]:SetPoint("TOPLEFT", ptcontainer, "TOPLEFT")
 for i =2, 4 do
 	pts[i] = oUF:Spawn("party"..i.."target", "oUF_Party"..i.."Target")
 	pts[i]:SetPoint("TOP", pts[i-1], "BOTTOM", 0, -50)
@@ -1039,58 +1046,38 @@ RegisterStateDriver(mts, "visibility", "[group:raid]show;hide")
 RuneFrame:ClearAllPoints()
 RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
 
-local healtree = {
-	["SHAMAN"] = 3,
-	["PRIEST"] = 2,
-	--["PALADIN"] = 0, -- TODO
-	["DRUID"] = 3,
+-- hardcode characternames for now
+local healspec = {
+	["Cedwani"] = 2,
+	["Farolgin"] = 1,
 }
 
--- 0 there is no healspec
--- 1 or 2 -> the healspec
--- 3 both are healspecs
-local function getHealSpec()
-	local result = 0
-	local name, _, points = GetTalentTabInfo(healtree[playerClass], nil, nil, 1)
-	if not name then return end
-	local _, _, points2 = GetTalentTabInfo(healtree[playerClass], nil, nil, 2)
-	if points > (UnitLevel("player")/2) then
-		result = 1
-	end
-	if points2 > (UnitLevel("player")/2) then
-		result = result + 2
-	end
-	return result
-end
-
-local function playerIsHealer()
-	if healtree[playerClass] then
-		local name, _, points = GetTalentTabInfo(healtree[playerClass])
-		if name then
-			oUF_profalbert_healer = points > (UnitLevel("player")/2)
-		end
-		return oUF_profalbert_healer
-	end
-	return false
-end
-
-local talentUpdateFrame = CreateFrame("Frame")
-talentUpdateFrame:RegisterEvent("PLAYER_ALIVE")
-talentUpdateFrame:RegisterEvent('PLAYER_LOGIN')
-talentUpdateFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
-talentUpdateFrame:SetScript("OnEvent", function(self, event)
-		if event ~= "PLAYER_TALENT_UPDATE" then
-			self:UnregisterEvent(event)
-		end
-		if not InCombatLockdown() then
-			if playerIsHealer() then
-				party:SetAttribute("showPlayer", true)
-				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, -81)
-			else
-				party:SetAttribute("showPlayer", false)
-				pts[1]:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
-			end
+local playerHealSpec = healspec[UnitName("player")]
+if playerHealSpec then
+	local SpecFrame = CreateFrame("Frame", nil, UIParent, "SecureHandlerStateTemplate")
+	SpecFrame:SetFrameRef("party", party)
+	SpecFrame:Execute([[
+		party = self:GetFrameRef("party")
+	]])
+	SpecFrame:SetAttribute("_onstate-healer", [[
+		if newstate == "healer" then
+			party:SetAttribute("showPlayer", true)
 		else
-			self:RegisterEvent("PLAYER_REGEN_ENABLED")
+			party:SetAttribute("showPlayer", false)
 		end
-	end)
+	]])
+	RegisterStateDriver(SpecFrame, "healer", ("[spec:%d]healer;nohealer"):format(playerHealSpec))
+
+	ptcontainer:SetFrameRef("party2", party)
+	ptcontainer:Execute([[
+		party2 = self:GetFrameRef("party2")
+	]])
+	ptcontainer:SetAttribute("_onstate-healer", [[
+		if newstate == "healer" then
+			self:SetPoint("TOPLEFT", party2, "TOPRIGHT", 35, -81)
+		else
+			self:SetPoint("TOPLEFT", party2, "TOPRIGHT", 35, 0)
+		end
+	]])
+	RegisterStateDriver(ptcontainer, "healer", ("[spec:%d]healer;nohealer"):format(playerHealSpec))
+end
