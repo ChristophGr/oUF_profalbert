@@ -228,7 +228,7 @@ local function updateName(self, event, unit)
 
 	if self.Class then
 		local color = white
-		if UnitIsPlayer(unit)	then
+		if UnitIsPlayer(unit) then
 			self.Class:SetText(UnitClass(unit))
 			color = RAID_CLASS_COLORS[select(2, UnitClass(unit))] or white
 		else
@@ -1050,6 +1050,67 @@ mts:SetManyAttributes(
 	"groupingOrder", "1,2,3,4,5,6,7,8"
 )
 RegisterStateDriver(mts, "visibility", "[group:raid]show;hide")
+
+local bossContainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
+RegisterStateDriver(bossContainer, "visibility", "[group:raid]show;hide")
+bossContainer:SetPoint("TOPLEFT", mts, "BOTTOMLEFT", 0, -30)
+oUF:SetActiveStyle("pa_tot")
+local boss = {}
+boss[1] = oUF:Spawn("boss1", "oUF_Boss1")
+boss[1]:SetParent(bossContainer)
+boss[1]:SetPoint("TOPLEFT", bossContainer, "TOPLEFT")
+for i = 2,4 do -- only 2 bosses for now
+	boss[i] = oUF:Spawn("boss" .. i, "oUF_Boss" .. i)
+	boss[i]:SetPoint("TOP", boss[i-1], "BOTTOM", 0, -5)
+	boss[i]:SetParent(bossContainer)
+end
+
+-- TODO castbar and targetframe sometimes
+local arenaContainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
+arenaContainer:SetPoint("TOPLEFT", UIParent, "LEFT", 10, 0)
+oUF:SetActiveStyle("pa_tot")
+local arena = {}
+arena[1] = oUF:Spawn("arena1", "oUF_Arena1")
+arena[1]:SetParent(arenaContainer)
+arena[1]:SetPoint("TOPLEFT", arenaContainer, "TOPLEFT")
+for i = 2,5 do
+	arena[i] = oUF:Spawn("arena" .. i, "oUF_Arena" .. i)
+	arena[i]:SetPoint("TOP", arena[i-1], "BOTTOM", 0, -5)
+	arena[i]:SetParent(arenaContainer)
+end
+-- pets should work
+local arenapets = {}
+arenapets[1] = oUF:Spawn("arenapet1", "oUF_Arenapet1")
+arenapets[1]:SetParent(arenaContainer)
+arenapets[1]:SetPoint("TOPLEFT", arena[1], "TOPRIGHT", 5, 0)
+for i = 2,5 do
+	arenapets[i] = oUF:Spawn("arenapet" .. i, "oUF_Arenapet" .. i)
+	arenapets[i]:SetPoint("TOP", arenapets[i-1], "BOTTOM", 0, -5)
+	arenapets[i]:SetParent(arenaContainer)
+end
+
+-- handle the original araneframes
+-- arenaframes are created when first entering an arena
+local dummy = function() end
+arenaContainer:RegisterEvent("PLAYER_ENTERING_WORLD")
+arenaContainer:SetScript("OnEvent", function(self)
+	for i = 1,5 do
+		local frame = _G["ArenaEnemyFrame" .. i]
+		if not frame then return end
+		self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+		frame:UnregisterAllEvents()
+		frame.Show = dummy
+		frame:Hide()
+	end
+end)
+
+-- handle original bossframes at minimap
+for i = 1,4 do
+	local frame = _G["Boss" .. i .. "TargetFrame"]
+	frame:UnregisterAllEvents()
+	frame.Show = dummy
+	frame:Hide()
+end
 
 -- move the RuneFrame somewhere sane
 RuneFrame:ClearAllPoints()
