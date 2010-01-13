@@ -1051,16 +1051,37 @@ mts:SetManyAttributes(
 )
 RegisterStateDriver(mts, "visibility", "[group:raid]show;hide")
 
+local enableTargetUpdate = function(object)
+	-- updating of "invalid" units.
+	local OnTargetUpdate
+	do
+		local timer = 0
+		OnTargetUpdate = function(self, elapsed)
+			if(not self.unit) then
+				return
+			elseif(timer >= .5) then
+				self:PLAYER_ENTERING_WORLD'OnTargetUpdate'
+				timer = 0
+			end
+			timer = timer + elapsed
+		end
+	end
+
+	object:SetScript("OnUpdate", OnTargetUpdate)
+end
+
 local bossContainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
 RegisterStateDriver(bossContainer, "visibility", "[group:raid]show;hide")
 bossContainer:SetPoint("TOPLEFT", mts, "BOTTOMLEFT", 0, -30)
 oUF:SetActiveStyle("pa_tot")
 local boss = {}
 boss[1] = oUF:Spawn("boss1", "oUF_Boss1")
+enableTargetUpdate(boss[1])
 boss[1]:SetParent(bossContainer)
 boss[1]:SetPoint("TOPLEFT", bossContainer, "TOPLEFT")
-for i = 2,4 do -- only 2 bosses for now
+for i = 2,4 do
 	boss[i] = oUF:Spawn("boss" .. i, "oUF_Boss" .. i)
+	enableTargetUpdate(boss[i])
 	boss[i]:SetPoint("TOP", boss[i-1], "BOTTOM", 0, -5)
 	boss[i]:SetParent(bossContainer)
 end
