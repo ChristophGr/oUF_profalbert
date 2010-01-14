@@ -786,8 +786,8 @@ local function setStyle(settings, self, unit)
 			self.Buffs = buffs
 		end -- settings["buffs"]
 	end -- if unit-find
-
-	if not unit or unit:find("partypet%d") then -- range on party, raid and party pets
+	if settings["range-fade"] then
+	--if not unit or unit:find("partypet%d") then -- range on party, raid and party pets
 		self.Range = true
 		self.inRangeAlpha = 1.0
 		self.outsideRangeAlpha = 0.6
@@ -884,6 +884,7 @@ local party = {
 	["debuffs-x"] = 2,
 	["debuffs-y"] = 3,
 	["health"] = fmt_full,
+	["range-rade"] = true,
 }
 party = merge(default, party)
 newStyle("party", party)
@@ -936,6 +937,7 @@ local raid = {
 	["buff-height"] = 10,
 	["leader"] = true,
 	["health"] = fmt_deficitnomax,
+	["range-rade"] = true,
 }
 newStyle("raid", raid)
 
