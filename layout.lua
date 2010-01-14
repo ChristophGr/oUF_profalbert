@@ -884,7 +884,7 @@ local party = {
 	["debuffs-x"] = 2,
 	["debuffs-y"] = 3,
 	["health"] = fmt_full,
-	["range-rade"] = true,
+	["range-fade"] = true,
 }
 party = merge(default, party)
 newStyle("party", party)
@@ -937,7 +937,7 @@ local raid = {
 	["buff-height"] = 10,
 	["leader"] = true,
 	["health"] = fmt_deficitnomax,
-	["range-rade"] = true,
+	["range-fade"] = true,
 }
 newStyle("raid", raid)
 
