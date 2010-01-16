@@ -571,11 +571,6 @@ local function setStyle(settings, self, unit)
 	hp.colorDisconnected = true
 	-- Healthbar text
 	hp.value = getFontString(hp)
-	--[[if grid then
-		hp.value:SetPoint("TOP", 0, -2)
-	else
-		hp.value:SetPoint("RIGHT", -2, 0)
-	end--]]
 	hp.value:SetPoint("CENTER")
 	if unit and (unit == "player" or unit:match("party%d$") or unit:match("raid%d+$")) then
 		AceTimer:ScheduleRepeatingTimer(updateStatus, 1, self)
@@ -797,11 +792,6 @@ local function setStyle(settings, self, unit)
 		self.Range = true
 		self.inRangeAlpha = 1.0
 		self.outsideRangeAlpha = 0.6
-		--[[if grid then
-			self.outsideRangeAlpha = 0.4
-		else
-			self.outsideRangeAlpha = micro and 0.4 or 0.6
-		end--]]
 	end
 
 	if unit == "target" then
@@ -851,7 +841,6 @@ local default = {
 	["leader"] = true,
 	["buff-height"] = 16,
 	["health"] = fmt_standard,
-	--["health2"] = fmt_perc,
 }
 
 local player = {
@@ -925,7 +914,6 @@ newStyle("partypet", partypet)
 _G.partypet = partypet
 
 local mts = {
-	--["initial-width"] = 80,
 	["debuffs-y"] = 2,
 	["health"] = fmt_minonly,
 	["health2"] = fmt_perc,
