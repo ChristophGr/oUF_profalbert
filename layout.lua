@@ -788,8 +788,8 @@ local function setStyle(settings, self, unit)
 			self.Buffs = buffs
 		end -- settings["buffs"]
 	end -- if unit-find
+
 	if settings["range-fade"] then
-	--if not unit or unit:find("partypet%d") then -- range on party, raid and party pets
 		self.Range = true
 		self.inRangeAlpha = 1.0
 		self.outsideRangeAlpha = 0.6
