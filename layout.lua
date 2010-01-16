@@ -575,8 +575,7 @@ local function setStyle(settings, self, unit)
 
 	self.PreUpdateHealth = updateBarColor
 	self.Health = hp
-	
-	if not unit or unit == "player" or unit == "target" then
+	if settings["healcomm"] then
 		self.HealCommBar = CreateFrame('StatusBar', nil, self.Health)
 		self.HealCommBar:SetHeight(0)
 		self.HealCommBar:SetWidth(0)
@@ -838,10 +837,12 @@ local default = {
 	["leader"] = true,
 	["buff-height"] = 16,
 	["health"] = fmt_standard,
+	-- ["healcomm"] = true,
 }
 
 local player = {
 	portrait = "left",
+	healcomm = true,
 }
 player = merge(default, player)
 newStyle("player",player)
@@ -853,6 +854,7 @@ local target = {
 	["buffs-y"] = 1,
 	["debuffs-x"] = 2,
 	["debuffs-y"] = 3,
+	healcomm = true,
 }
 target = merge(default, target)
 newStyle("target", target)
@@ -877,6 +879,7 @@ local party = {
 	["debuffs-y"] = 3,
 	["health"] = fmt_full,
 	["range-fade"] = true,
+	healcomm = true,
 }
 party = merge(default, party)
 newStyle("party", party)
@@ -914,6 +917,7 @@ local mts = {
 	["debuffs-y"] = 2,
 	["health"] = fmt_minonly,
 	["health2"] = fmt_perc,
+	["healcomm"] = true,
 }
 mts = merge(small, mts)
 newStyle("mts", mts)
@@ -929,6 +933,7 @@ local raid = {
 	["leader"] = true,
 	["health"] = fmt_deficitnomax,
 	["range-fade"] = true,
+	["healcomm"] = true,
 }
 newStyle("raid", raid)
 
