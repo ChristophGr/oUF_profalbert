@@ -682,6 +682,15 @@ local function setStyle(settings, self, unit)
 			pp.value:SetPoint("CENTER")
 		end
 	end
+
+	if settings["lfdrole"] then
+		local lfdrole = hp:CreateTexture(nil, "OVERLAY")
+		lfdrole:SetHeight(16)
+		lfdrole:SetWidth(16)
+		lfdrole:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", -8, 8)
+		self.LFDRole = lfdrole
+	end
+
 	--raid,	party or player gets a leader icon
 	if (not unit or unit == "player") and settings["leader"] then
 		local leader = hp:CreateTexture(nil, "OVERLAY")
@@ -875,6 +884,7 @@ local party = {
 	["debuffs-y"] = 3,
 	["health"] = fmt_full,
 	["range-fade"] = true,
+	["ldfrole"] = true,
 	healcomm = true,
 }
 party = merge(default, party)
