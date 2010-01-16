@@ -198,21 +198,18 @@ local function updateName(self, event, unit)
 			if owner == "" then
 				owner = "player"
 			end
-
-			local ownerName = UnitName(owner)
-			if not ownerName then
-				-- yprint(owner)
-				-- print(self:GetName())
-			end
-			local test, class = UnitClass(owner)
-			local colors = RAID_CLASS_COLORS[class]
-			if colors then
-				local r = math.floor(colors.r * 255)
-				local g = math.floor(colors.g * 255)
-				local b = math.floor(colors.b * 255)
-				name = ("|cff%02x%02x%02x%s|r's %s"):format(r, g, b, UnitName(owner), name)
-			else
-				name = ("%s's %s"):format(UnitName(owner) or "", name)
+			if UnitHasVehicleUI(owner) then
+				local ownerName = UnitName(owner)
+				local test, class = UnitClass(owner)
+				local colors = RAID_CLASS_COLORS[class]
+				if colors then
+					local r = math.floor(colors.r * 255)
+					local g = math.floor(colors.g * 255)
+					local b = math.floor(colors.b * 255)
+					name = ("|cff%02x%02x%02x%s|r's %s"):format(r, g, b, UnitName(owner), name)
+				else
+					name = ("%s's %s"):format(UnitName(owner) or "", name)
+				end
 			end
 		end
 	end
