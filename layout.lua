@@ -56,6 +56,7 @@ local white = { r = 1, g = 1, b = 1}
 
 local barFormatMinMax = "%s/%s"
 local barFormatPerc = "%d%%"
+local barFormatPerc2 = "%.1f%%"
 local barFormatPercMinMax = "%s/%s %d%%"
 local barFormatDeficit = "|cffff8080%s|r"
 local barFormatDeficitNoMax = "%s"
@@ -87,7 +88,12 @@ local function fmt_standard(txt, min, max)
 end
 
 local function fmt_perc(txt, min, max)
-	txt:SetFormattedText(barFormatPerc,floor(min/max*100))
+	local perc = min/max*100
+	if perc < 10 then
+		txt:SetFormattedText(barFormatPerc2, perc)
+	else
+		txt:SetFormattedText(barFormatPerc, perc)
+	end
 end
 
 local function fmt_full(txt, min, max)
