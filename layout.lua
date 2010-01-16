@@ -589,25 +589,21 @@ local function setStyle(settings, self, unit)
 
 	local health = settings["health"]
 	local health2 = settings["health2"]
-	
-	
-	--XXX remove
-	if not health then
-		print(self:GetName(), " has no health")
-	end
-	
+
 	if health2 then
 		hp.value2 = getFontString(hp)
 		hp.value2:SetFont(defaultfont, 11)
 		hp.value2:SetTextColor(1,0.3,0.3,1)
-		hp.value:SetPoint("RIGHT", hp.value2, "LEFT", 1)
-		hp.value2:SetPoint("RIGHT", hp, "RIGHT", 1)
+		hp.value2:SetPoint("RIGHT", hp, "RIGHT")
+		hp.dummy = getFontString(hp)
+		hp.dummy:SetText(" ")
+		hp.dummy:SetPoint("RIGHT", hp.value2, "LEFT")
+		hp.value:SetPoint("RIGHT", hp.dummy, "LEFT")
 	else
 		health2 = function() end
 	end
 	self.healthfunc = health
 	self.healthfunc2 = health2
-	
 
 	local function updateHealth(self, event, unit, bar, min, max)
 		local status = unit_status[UnitGUID(unit)]
