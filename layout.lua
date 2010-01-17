@@ -436,6 +436,95 @@ local function matchUnit(unit, ...)
 	return false
 end
 
+-- TODO tune colors
+local rcast, gcast, bcast = 1, 0.6, 0
+local rchan, gchan, bchan = 0, 0, 1
+local rfail, gfail, bfail = 1, 0, 0
+
+local function createCastbar(self, width, height)
+	local cb = CreateFrame("StatusBar", nil, self)
+	cb:SetHeight(height)
+	cb:SetWidth(width)
+	cb:SetStatusBarTexture(statusbartexture)
+	return cb
+end
+
+local function updateMax(castbar)
+	castbar.total:SetFormattedText("%.1f", castbar.max or 0)
+end
+
+local function postChannelStart(self)
+	local castbar = self.Castbar
+	castbar:SetStatusBarColor(rchan, gchan, bchan)
+	updateMax(castbar)
+end
+
+local function postCastStart(self)
+	local castbar = self.Castbar
+	castbar:SetStatusBarColor(rcast, gcast, bcast)
+	updateMax(castbar)
+end
+
+local function postCastStartNp(self, event, unit)
+	if UnitIsUnit("player", unit) then
+		local cb = self.Castbar
+		cb.casting = nil
+	else
+		postCastStart(self)
+	end
+end
+
+local function postChannelStartNp(self, event, unit)
+	if UnitIsUnit("player", unit) then
+		local cb = self.Castbar
+		cb.channeling = nil
+	else
+		postChannelStart(self)
+	end
+end
+
+local function postCastFailed(self)
+	self:SetStatusBarColor(rfail, gfail, bfail)
+end
+
+local function addCastbarBG(cb)
+	local bg = cb:CreateTexture(nil, "BORDER")
+	bg:SetAllPoints(cb)
+	bg:SetTexture(statusbartexture)
+	bg:SetAlpha(.5)
+	bg:SetVertexColor(0, 0, 0)
+end
+
+local function setupCastbar(self, cb)
+	local icon = cb:CreateTexture(nil, "OVERLAY")
+	icon:SetWidth(cb:GetHeight())
+	icon:SetHeight(cb:GetHeight())
+	icon:SetPoint("RIGHT", cb, "LEFT")
+	cb.Icon = icon
+	local text = getFontString(cb, cbfont)
+	text:SetPoint("LEFT", cb, "LEFT", 3, 0)
+	cb.Text = text
+	local total = getFontString(cb, cbfont)
+	total:SetPoint("RIGHT", cb, "RIGHT", -3, 0)
+	cb.total = total
+	local spacer = getFontString(cb)
+	spacer:SetPoint("RIGHT", total, "LEFT")
+	spacer:SetText(" || ")
+	local ttime = getFontString(cb, cbfont)
+	ttime:SetPoint("RIGHT", spacer, "LEFT")
+	cb.Time = ttime
+
+	text:SetPoint("RIGHT", ttime, "LEFT")
+	--cb.SafeZone = true
+	--cb.Spark = true
+	self.Castbar = cb
+
+	self.PostChannelStart = postChannelStart
+	self.PostCastStart = postCastStart
+	self.PostCastFailed = postCastFailed
+	--return cb
+end
+
 local function setStyle(settings, self, unit)
 	self.menu = menu -- Enable the menus
 	self:RegisterForClicks("anyup")
@@ -531,6 +620,48 @@ local function setStyle(settings, self, unit)
 		fallback:SetAllPoints(portrait)
 		portrait.fallback = fallback
 		self.Portrait2 = portrait
+	end
+
+	if unit == "player" then
+		local cb = createCastbar(self, 200, 20)
+		cb:SetPoint("CENTER", UIParent, "CENTER", 0, -170)
+		addCastbarBG(cb)
+		setupCastbar(self, cb)
+	elseif unit == "target" then
+		local cb = createCastbar(self, 150, 20)
+		cb:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
+		addCastbarBG(cb)
+		setupCastbar(self, cb)
+		self.PostCastStart = postCastStartNp
+		self.PostChannelStart = postChannelStartNp
+	elseif unit == "focus" then
+		local cb = createCastbar(self, width, 15)
+		cb:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -20)
+		addCastbarBG(cb)
+		local text = getFontString(cb)
+		text:SetPoint("LEFT", cb, "LEFT", 2, 0)
+		cb.Text = text
+		local total = getFontString(cb)
+		total:SetPoint("RIGHT", cb, "RIGHT", -2, 0)
+		text:SetPoint("RIGHT", total, "LEFT", -1, 0)
+		cb.total = total
+		self.Castbar = cb
+		self.PostCastStart = postCastStartNp
+		self.PostChannelStart = postChannelStartNp
+	elseif unit == "pet" then
+		local cb = createCastbar(self, width, 15)
+		cb:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -5)
+		addCastbarBG(cb)
+		local text = getFontString(cb)
+		text:SetPoint("LEFT", cb, "LEFT", 2, 0)
+		cb.Text = text
+		local total = getFontString(cb)
+		total:SetPoint("RIGHT", cb, "RIGHT", -2, 0)
+		text:SetPoint("RIGHT", total, "LEFT", -1, 0)
+		cb.total = total
+		self.Castbar = cb
+		self.PostCastStart = postCastStart
+		self.PostChannelStart = postChannelStart
 	end
 
 	-- Healthbar
