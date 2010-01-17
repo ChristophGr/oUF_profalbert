@@ -596,10 +596,7 @@ local function setStyle(settings, self, unit)
 		hp.value2:SetFont(defaultfont, 11)
 		hp.value2:SetTextColor(1,0.3,0.3,1)
 		hp.value2:SetPoint("RIGHT", hp, "RIGHT")
-		hp.dummy = getFontString(hp)
-		hp.dummy:SetText(" ")
-		hp.dummy:SetPoint("RIGHT", hp.value2, "LEFT")
-		hp.value:SetPoint("RIGHT", hp.dummy, "LEFT")
+		hp.value:SetPoint("RIGHT", hp.value2, "LEFT", -3, 0)
 	else
 		health2 = function() end
 	end
