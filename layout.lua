@@ -50,6 +50,7 @@ local backdrop = {
 local statusbartexture = LSM:Fetch("statusbar", "Perl v2")
 local bordertexture = "Interface\\AddOns\\oUF_profalbert\\media\\border"
 local defaultfont = LSM:Fetch("font", "Arial Narrow")
+local cbfont = LSM:Fetch("font", "Tw_Cen_MT_Bold")
 local bigfont = LSM:Fetch("font", "Diablo")
 
 local white = { r = 1, g = 1, b = 1}
@@ -385,11 +386,11 @@ local function getFontStringHeight(parent)
 	end
 end
 
-local function getFontString(parent)
+local function getFontString(parent, font)
 	local fs = parent:CreateFontString(nil, "OVERLAY")
 	local height = getFontStringHeight(parent)
 	
-	fs:SetFont(defaultfont, height)
+	fs:SetFont(font or defaultfont, height)
 	fs:SetShadowColor(0,0,0)
 	fs:SetShadowOffset(0.8, -0.8)
 	fs:SetTextColor(1,1,1)
