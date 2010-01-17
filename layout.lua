@@ -685,7 +685,7 @@ local function setStyle(settings, self, unit)
 		local lfdrole = hp:CreateTexture(nil, "OVERLAY")
 		lfdrole:SetHeight(16)
 		lfdrole:SetWidth(16)
-		lfdrole:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", -8, 8)
+		lfdrole:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", -8, -8)
 		self.LFDRole = lfdrole
 	end
 
@@ -882,7 +882,7 @@ local party = {
 	["debuffs-y"] = 3,
 	["health"] = fmt_full,
 	["range-fade"] = true,
-	["ldfrole"] = true,
+	["lfdrole"] = true,
 	healcomm = true,
 }
 party = merge(default, party)
