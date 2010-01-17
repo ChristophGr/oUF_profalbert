@@ -181,8 +181,6 @@ local function updateLevel(self, event, unit)
 
 	level = getDifficultyColor(level):format(level)
 	lvl:SetFormattedText(classificationFormats[UnitClassification(unit)] or classificationFormats["normal"], level)
---	lvl:SetTextColor(getDifficultyColor(level))
-
 end
 
 local function smartRace(u)
@@ -193,6 +191,7 @@ local function updateName(self, event, unit)
 	if self.unit ~= unit then return end
 
 	local name = UnitName(unit) or ""
+
 	if unit:match("pet") then
 		local owner = unit:gsub("pet", "")
 		if owner then
@@ -484,7 +483,7 @@ local function postChannelStartNp(self, event, unit)
 end
 
 local function postCastFailed(self)
-	self:SetStatusBarColor(rfail, gfail, bfail)
+	self.Castbar:SetStatusBarColor(rfail, gfail, bfail)
 end
 
 local function addCastbarBG(cb)
@@ -516,7 +515,13 @@ local function setupCastbar(self, cb)
 
 	text:SetPoint("RIGHT", ttime, "LEFT")
 	--cb.SafeZone = true
-	--cb.Spark = true
+	--[[local spark = cb:CreateTexture(nil, "BORDER")
+	spark:SetVertexColor(1,1,1)
+	cb.Spark = spark--]]
+	local sz = cb:CreateTexture(nil, "HIGHLIGHT")
+	sz:SetAllPoints(cb)
+	cb.SafeZone = sz
+	
 	self.Castbar = cb
 
 	self.PostChannelStart = postChannelStart
