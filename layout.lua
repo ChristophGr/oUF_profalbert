@@ -483,7 +483,7 @@ local function postChannelStartNp(self, event, unit)
 end
 
 local function postCastFailed(self)
-	self.Castbar:SetStatusBarColor(rfail, gfail, bfail)
+--	self.Castbar:SetStatusBarColor(rfail, gfail, bfail)
 end
 
 local function addCastbarBG(cb)
