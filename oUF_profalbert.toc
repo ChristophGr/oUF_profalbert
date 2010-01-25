@@ -7,6 +7,5 @@
 ## SavedVarialbes: oUF_profalbert_healer
 
 portrait2.lua
-vehicle2.lua
 layout.xml
 layout.lua

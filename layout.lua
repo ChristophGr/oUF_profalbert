@@ -530,6 +530,12 @@ local function setupCastbar(self, cb)
 	--return cb
 end
 
+local function updateAllElements(frame)
+	for _, v in ipairs(frame.__elements) do
+		v(frame, 'UpdateElement', frame.unit)
+	end
+end
+
 local function setStyle(settings, self, unit)
 	self.menu = menu -- Enable the menus
 	self:RegisterForClicks("anyup")
@@ -537,11 +543,9 @@ local function setStyle(settings, self, unit)
 	self:SetScript("OnEnter", OnEnter)
 	self:SetScript("OnLeave", OnLeave)
 
-	self:SetAttribute("toggleForVehicle", true)
-	self.disallowVehicleSwap = true
-	if not unit or compareUnit(unit, "player", "pet") or matchUnit(unit, "party%d$", "partypet%d$") then
-		self.VehicleSwap2 = true
-	end
+	-- hook the onshow-script, if events are fired before the frame is shown
+	-- the petframe sometimes needs it.
+	self:HookScript("OnShow", updateAllElements)
 
 	local width = settings["initial-width"] or 100
 	local height = settings["initial-height"] or 20
