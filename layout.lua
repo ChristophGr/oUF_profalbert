@@ -34,7 +34,6 @@ local playerClass = select(2, UnitClass("player")) -- combopoints for druid/rogu
 local LibStub = _G.LibStub
 local LSM = LibStub("LibSharedMedia-3.0")
 local AceTimer = LibStub("AceTimer-3.0")
-local QuickHealth = LibStub("LibQuickHealth-2.0")
 
 local backdrop = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -258,8 +257,6 @@ local unit_status = setmetatable({}, { __index = function(self, key)
 		end
 		return val
 	end})
-_G.unit_status = unit_status
-
 
 local updateHealth
 local function updateStatusText(self, unit, status)
@@ -1193,37 +1190,16 @@ mts:SetManyAttributes(
 )
 RegisterStateDriver(mts, "visibility", "[group:raid]show;hide")
 
-local enableTargetUpdate = function(object)
-	-- updating of "invalid" units.
-	local OnTargetUpdate
-	do
-		local timer = 0
-		OnTargetUpdate = function(self, elapsed)
-			if(not self.unit) then
-				return
-			elseif(timer >= .5) then
-				self:PLAYER_ENTERING_WORLD'OnTargetUpdate'
-				timer = 0
-			end
-			timer = timer + elapsed
-		end
-	end
-
-	object:SetScript("OnUpdate", OnTargetUpdate)
-end
-
 local bossContainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
 RegisterStateDriver(bossContainer, "visibility", "[group:raid]show;hide")
 bossContainer:SetPoint("TOPLEFT", mts, "BOTTOMLEFT", 0, -30)
 oUF:SetActiveStyle("pa_tot")
 local boss = {}
 boss[1] = oUF:Spawn("boss1", "oUF_Boss1")
-enableTargetUpdate(boss[1])
 boss[1]:SetParent(bossContainer)
 boss[1]:SetPoint("TOPLEFT", bossContainer, "TOPLEFT")
 for i = 2,4 do
 	boss[i] = oUF:Spawn("boss" .. i, "oUF_Boss" .. i)
-	enableTargetUpdate(boss[i])
 	boss[i]:SetPoint("TOP", boss[i-1], "BOTTOM", 0, -5)
 	boss[i]:SetParent(bossContainer)
 end
@@ -1266,14 +1242,6 @@ arenaContainer:SetScript("OnEvent", function(self)
 		frame:Hide()
 	end
 end)
-
--- handle original bossframes at minimap
-for i = 1,4 do
-	local frame = _G["Boss" .. i .. "TargetFrame"]
-	frame:UnregisterAllEvents()
-	frame.Show = dummy
-	frame:Hide()
-end
 
 -- move the RuneFrame somewhere sane
 RuneFrame:ClearAllPoints()
