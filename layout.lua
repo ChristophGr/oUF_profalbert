@@ -273,8 +273,9 @@ local function updateStatusText(self, unit, status)
 		end
 		value:SetTextColor(1,1,1)
 		return
-	end
-	if cur == max then
+	elseif status.offline then
+		value:SetText("Offline")
+	elseif cur == max then
 		value:SetTextColor(1,1,1)
 		if status.aggro and self.Banzai and not unit:match("target") then
 			value:SetTextColor(1,0,0)
