@@ -629,48 +629,6 @@ local function setStyle(settings, self, unit)
 		self.Portrait2 = portrait
 	end
 
-	if unit == "player" then
-		local cb = createCastbar(self, 200, 20)
-		cb:SetPoint("CENTER", UIParent, "CENTER", 0, -170)
-		addCastbarBG(cb)
-		setupCastbar(self, cb)
-	elseif unit == "target" then
-		local cb = createCastbar(self, 150, 20)
-		cb:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
-		addCastbarBG(cb)
-		setupCastbar(self, cb)
-		self.PostCastStart = postCastStartNp
-		self.PostChannelStart = postChannelStartNp
-	elseif unit == "focus" then
-		local cb = createCastbar(self, width, 15)
-		cb:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -20)
-		addCastbarBG(cb)
-		local text = getFontString(cb)
-		text:SetPoint("LEFT", cb, "LEFT", 2, 0)
-		cb.Text = text
-		local total = getFontString(cb)
-		total:SetPoint("RIGHT", cb, "RIGHT", -2, 0)
-		text:SetPoint("RIGHT", total, "LEFT", -1, 0)
-		cb.total = total
-		self.Castbar = cb
-		self.PostCastStart = postCastStartNp
-		self.PostChannelStart = postChannelStartNp
-	elseif unit == "pet" then
-		local cb = createCastbar(self, width, 15)
-		cb:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -5)
-		addCastbarBG(cb)
-		local text = getFontString(cb)
-		text:SetPoint("LEFT", cb, "LEFT", 2, 0)
-		cb.Text = text
-		local total = getFontString(cb)
-		total:SetPoint("RIGHT", cb, "RIGHT", -2, 0)
-		text:SetPoint("RIGHT", total, "LEFT", -1, 0)
-		cb.total = total
-		self.Castbar = cb
-		self.PostCastStart = postCastStart
-		self.PostChannelStart = postChannelStart
-	end
-
 	-- Healthbar
 	local hp
 	hp = CreateFrame("StatusBar", nil, self)
@@ -842,6 +800,12 @@ local function setStyle(settings, self, unit)
 		masterlooter:SetPoint("TOPRIGHT", self, "TOPRIGHT", 8, 8)
 		masterlooter:SetTexture("Interface\\GroupFrame\\UI-Group-MasterLooter")
 		self.MasterLooter = masterlooter
+
+		local readycheck = hp:CreateTexture(nil, "OVERLAY")
+		readycheck:SetHeight(16)
+		readycheck:SetWidth(16)
+		readycheck:SetPoint("TOPLEFT", hp, "RIGHT", -8, 8)
+		self.ReadyCheck = readycheck
 	end
 
 	if unit == "player" then -- player gets resting and combat
