@@ -441,7 +441,6 @@ end
 
 local function fixTiling(bar)
 	-- WORKAROUND for texture-tiling stuff
-	bar:GetStatusBarTexture():SetHorizTile(false)
 	bar:GetStatusBarTexture():SetVertTile(false)
 	-- end WORKAROUND
 end
