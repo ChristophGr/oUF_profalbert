@@ -433,105 +433,17 @@ local function matchUnit(unit, ...)
 	return false
 end
 
--- TODO tune colors
-local rcast, gcast, bcast = 1, 0.6, 0
-local rchan, gchan, bchan = 0, 0, 1
-local rfail, gfail, bfail = 1, 0, 0
-
-local function createCastbar(self, width, height)
-	local cb = CreateFrame("StatusBar", nil, self)
-	cb:SetHeight(height)
-	cb:SetWidth(width)
-	cb:SetStatusBarTexture(statusbartexture)
-	return cb
-end
-
-local function updateMax(castbar)
-	castbar.total:SetFormattedText("%.1f", castbar.max or 0)
-end
-
-local function postChannelStart(self)
-	local castbar = self.Castbar
-	castbar:SetStatusBarColor(rchan, gchan, bchan)
-	updateMax(castbar)
-end
-
-local function postCastStart(self)
-	local castbar = self.Castbar
-	castbar:SetStatusBarColor(rcast, gcast, bcast)
-	updateMax(castbar)
-end
-
-local function postCastStartNp(self, event, unit)
-	if UnitIsUnit("player", unit) then
-		local cb = self.Castbar
-		cb.casting = nil
-	else
-		postCastStart(self)
-	end
-end
-
-local function postChannelStartNp(self, event, unit)
-	if UnitIsUnit("player", unit) then
-		local cb = self.Castbar
-		cb.channeling = nil
-	else
-		postChannelStart(self)
-	end
-end
-
-local function postCastFailed(self)
---	self.Castbar:SetStatusBarColor(rfail, gfail, bfail)
-end
-
-local function addCastbarBG(cb)
-	local bg = cb:CreateTexture(nil, "BORDER")
-	bg:SetAllPoints(cb)
-	bg:SetTexture(statusbartexture)
-	bg:SetAlpha(.5)
-	bg:SetVertexColor(0, 0, 0)
-end
-
-local function setupCastbar(self, cb)
-	local icon = cb:CreateTexture(nil, "OVERLAY")
-	icon:SetWidth(cb:GetHeight())
-	icon:SetHeight(cb:GetHeight())
-	icon:SetPoint("RIGHT", cb, "LEFT")
-	cb.Icon = icon
-	local text = getFontString(cb, cbfont)
-	text:SetPoint("LEFT", cb, "LEFT", 3, 0)
-	cb.Text = text
-	local total = getFontString(cb, cbfont)
-	total:SetPoint("RIGHT", cb, "RIGHT", -3, 0)
-	cb.total = total
-	local spacer = getFontString(cb)
-	spacer:SetPoint("RIGHT", total, "LEFT")
-	spacer:SetText(" || ")
-	local ttime = getFontString(cb, cbfont)
-	ttime:SetPoint("RIGHT", spacer, "LEFT")
-	cb.Time = ttime
-
-	text:SetPoint("RIGHT", ttime, "LEFT")
-	--cb.SafeZone = true
-	--[[local spark = cb:CreateTexture(nil, "BORDER")
-	spark:SetVertexColor(1,1,1)
-	cb.Spark = spark--]]
-	local sz = cb:CreateTexture(nil, "HIGHLIGHT")
-	sz:SetAllPoints(cb)
-	cb.SafeZone = sz
-	
-	self.Castbar = cb
-
-	self.PostChannelStart = postChannelStart
-	self.PostCastStart = postCastStart
-	self.PostCastFailed = postCastFailed
-	--return cb
-end
-
 local function updateAllElements(frame)
 	for _, v in ipairs(frame.__elements) do
 		v(frame, 'UpdateElement', frame.unit)
 	end
+end
+
+local function fixTiling(bar)
+	-- WORKAROUND for texture-tiling stuff
+	bar:GetStatusBarTexture():SetHorizTile(false)
+	bar:GetStatusBarTexture():SetVertTile(false)
+	-- end WORKAROUND
 end
 
 local function setStyle(settings, self, unit)
@@ -634,6 +546,7 @@ local function setStyle(settings, self, unit)
 	hp = CreateFrame("StatusBar", nil, self)
 	hp:SetHeight(hpheight)
 	hp:SetStatusBarTexture(statusbartexture)
+	fixTiling(hp)
 
 	if bb then
 		hp:SetPoint("TOPLEFT", bb, "BOTTOMLEFT", 0, -1.5)
@@ -677,6 +590,7 @@ local function setStyle(settings, self, unit)
 		self.HealCommBar:SetHeight(0)
 		self.HealCommBar:SetWidth(0)
 		self.HealCommBar:SetStatusBarTexture(self.Health:GetStatusBarTexture():GetTexture())
+		fixTiling(self.HealCommBar)
 		self.HealCommBar:SetStatusBarColor(0, 1, 0, 0.25)
 		self.HealCommBar:SetPoint('LEFT', self.Health, 'LEFT')
 
@@ -744,6 +658,7 @@ local function setStyle(settings, self, unit)
 		pp = CreateFrame("StatusBar", nil, self)
 		pp:SetHeight(ppheight)
 		pp:SetStatusBarTexture(statusbartexture)
+		fixTiling(pp)
 
 		pp:SetPoint("LEFT")
 		pp:SetPoint("RIGHT")
