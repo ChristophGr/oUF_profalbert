@@ -1161,4 +1161,6 @@ if playerHealSpec then
 		end
 	]])
 	RegisterStateDriver(ptcontainer, "healer", ("[spec:%d]healer;nohealer"):format(playerHealSpec))
+else
+	party:SetAttribute("showPlayer", false)
 end
