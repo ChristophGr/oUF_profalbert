@@ -818,6 +818,28 @@ local function setStyle(settings, self, unit)
 	end
 	self.PostCreateAuraIcon = auraIcon
 
+	if settings["shield"] then
+    local spellName, _, texture = GetSpellInfo(49284)
+    local shieldFrame = CreateFrame('Frame', nil, self)
+    shieldFrame:SetHeight(10)
+    shieldFrame:SetWidth(10)
+    shieldFrame:SetPoint("RIGHT", self, "RIGHT")
+
+    local shieldIcon = shieldFrame:CreateTexture(nil, "OVERLAY")
+    shieldIcon:SetTexture(texture)
+    shieldIcon:SetAllPoints(shieldFrame)
+    shieldIcon:Hide()
+    shieldFrame:RegisterEvent("UNIT_AURA")
+    shieldFrame:SetScript("OnEvent", function(self)
+        local unit = self:GetParent().unit
+        if unit and UnitAura(self:GetParent().unit, spellName) then
+          shieldIcon:Show()
+        else
+          shieldIcon:Hide()
+        end
+      end)
+	end
+
 	return self
 end
 
@@ -938,6 +960,7 @@ local mts = {
 	["health"] = fmt_minonly,
 	["health2"] = fmt_perc,
 	["healcomm"] = true,
+	["shield"] = true,
 }
 mts = merge(small, mts)
 newStyle("mts", mts)
@@ -954,6 +977,7 @@ local raid = {
 	["health"] = fmt_deficitnomax,
 	["range-fade"] = true,
 	["healcomm"] = true,
+	["shield"] = true,
 }
 newStyle("raid", raid)
 
