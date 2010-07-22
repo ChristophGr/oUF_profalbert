@@ -33,11 +33,32 @@ local menu = function(self)
 	end
 end
 
-local siValue = function(val)
-	if(val >= 1e6) then
-		return ('%.1f'):format(val / 1e6):gsub('%.', 'm')
+function round(num, idp)
+	local mult = 10^(idp or 0)
+	return math.floor(num * mult + 0.5) / mult
+end
+
+local siValueShort = function(val)
+	if(val >= 1e7) then
+		return ("%dm"):format(round(val / 1e6))
+	elseif(val >= 1e6) then
+		return ("%.1fm"):format(round(val / 1e6), 1)
 	elseif(val >= 1e4) then
-		return ("%.1f"):format(val / 1e3):gsub('%.', 'k')
+		return ("%dk"):format(round(val / 1e3))
+	elseif(val >= 1e3) then
+		return ("%.1fk"):format(round(val / 1e3, 1))
+	else
+		return val
+	end
+end
+
+local siValue = function(val)
+	if(val >= 1e7) then
+		return ("%dm"):format(round(val / 1e6))
+	elseif(val >= 1e6) then
+		return ("%.1fm"):format(round(val / 1e6), 1)
+	elseif(val >= 1e5) then
+		return ("%dk"):format(round(val / 1e3))
 	else
 		return val
 	end
@@ -60,6 +81,13 @@ oUF.Tags['profalbert:maxhp'] = function(unit)
 	return siValue(UnitHealthMax(unit))
 end
 oUF.TagEvents['profalbert:maxhp'] = oUF.TagEvents.missinghp
+
+oUF.Tags['profalbert:perhp'] = function(unit)
+	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
+	local val = UnitHealth(unit) / UnitHealthMax(unit) * 100
+	return round(val, 1)
+end
+oUF.TagEvents['profalbert:perhp'] = oUF.TagEvents.missinghp
 
 
 oUF.Tags['profalbert:power'] = function(unit)
@@ -207,7 +235,20 @@ local function makeHealthBar(self, height, anchors) -- above, portrait, right)
 	return Health
 end
 
-local function makeHealthValue(self, tag)
+local function makeHealthValue(self, tag, point)
+	local HealthPoints = getFontString(self.Health)
+	if point then
+		HealthPoints:SetPoint(unpack(point))
+	else
+		HealthPoints:SetPoint("CENTER")
+	end
+
+	self:Tag(HealthPoints, tag)
+
+	self.Health.value = HealthPoints
+end
+
+local function makeHealthValue2(self, tag)
 	local HealthPoints = getFontString(self.Health)
 	HealthPoints:SetPoint("CENTER")
 	
@@ -322,7 +363,7 @@ local function Shared(self, settings)
 	}
 	local Health = makeHealthBar(self, settings["hp-height"] or 25, anchors)
 	if settings["hp-tag"] then
-		makeHealthValue(self, settings["hp-tag"])
+		makeHealthValue(self, settings["hp-tag"], settings["hp-point"])
 	end
 	anchors[1] = { "TOP", Health, "BOTTOM", }
 	local Power = DoPower(self, anchors)
@@ -349,6 +390,7 @@ end--]]
 end--]]
 
 local DoAuras = function(self)
+	if true then return end
 	-- Buffs
 	local Buffs = CreateFrame("Frame", nil, self)
 	Buffs:SetPoint("BOTTOM", self, "TOP")
@@ -380,8 +422,9 @@ local big = {
 	["initial-width"] = 140,
 	["initial-height"] = 48,
 	["hp-height"] = 22,
+	["hp-point"] = { "RIGHT" },
 	["pp-height"] = 12,
-	["hp-tag"] = '[dead][offline][profalbert:curhp]/[profalbert:maxhp] |cffcc3333[perhp]%|r',
+	["hp-tag"] = '[dead][offline][profalbert:curhp]/[profalbert:maxhp] |cffcc3333[profalbert:perhp]%|r',
 	["pp-tag"] = '[profalbert:power]',
 	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [raidcolor][name]',
 }
@@ -390,8 +433,19 @@ local small = {
 	["initial-width"] = 80,
 	["initial-height"] = 30,
 	["hp-height"] = 16,
-	["pp-height"] = 3,
+	["pp-height"] = 4,
+	["hp-point"] = { "CENTER" },
 	["info-tag"] = '[raidcolor][name]',
+}
+
+local focus = {
+	["initial-width"] = 90,
+	["initial-height"] = 35,
+	["hp-height"] = 18,
+	["pp-height"] = 4,
+	["hp-point"] = { "CENTER" },
+	["hp-tag"] = '[dead][profalbert:curhp]/[profalbert:maxhp]',
+	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [raidcolor][name]',
 }
 
 local UnitSpecific = {
@@ -402,38 +456,41 @@ local UnitSpecific = {
 	end,
 
 	targettarget = function(self)
-		Shared(self, small)
+		local settings = CopyTable(small)
+		settings["hp-point"] = { "RIGHT", }
+		settings["hp-tag"] = "[profalbert:curhp] |cffcc3333[profalbert:perhp]%|r"
+		Shared(self, settings)
 		DoAuras(self)
 	end,
 	player = function(self)
-		Shared(self, big)
-		self.Health.value:ClearAllPoints()
-		self.Health.value:SetPoint("RIGHT")
+		local settings = CopyTable(big)
+		settings["hp-point"] = nil
+		settings["hp-tag"] = '[dead][profalbert:curhp]/[profalbert:maxhp]'
+		Shared(self, settings)
+		--[[self.Health.value:ClearAllPoints()
+		self.Health.value:SetPoint("RIGHT")--]]
+		
 		makePortrait(self)
 		makeResting(self)
 		makeLeader(self)
-
-		
 		--DoPower(self)
 --		self:RegisterEvent("PLAYER_UPDATE_RESTING", PLAYER_UPDATE_RESTING)
 	end,
+	focus = function(self)
+		Shared(self, focus)
+	end,
+	focustarget = function(self)
+		local settings = CopyTable(small)
+		settings["hp-tag"] = "[profalbert:curhp] |cffcc3333[profalbert:perhp]%|r"
+		settings["hp-point"] = { "RIGHT", }
+		Shared(self, settings)
+	end,
+	party = function(self)
+		Shared(self, big)
+		makePortrait(self)
+		makeLeader(self)
+	end,
 }
-
-do
-	local range = {
-		insideAlpha = 1,
-		outsideAlpha = .5,
-	}
-
-	UnitSpecific.party = function(self)
-		Shared(self)
-
-		DoAuras(self)
-		DoPower(self)
-
-		self.Range = range
-	end
-end
 
 oUF:RegisterStyle("Classic", function(self, unit)
 	Shared(self, small)
@@ -460,12 +517,15 @@ end
 
 oUF:Factory(function(self)
 	local player = spawnHelper(self, 'player', "RIGHT", UIParent, "CENTER", -80, -230)
-	spawnHelper(self, 'pet', 'TOP', player, 'BOTTOM', 0, -16)
+	spawnHelper(self, 'pet', "BOTTOMRIGHT", player, "TOPLEFT", -25, -10)
 	local target = spawnHelper(self, 'target',"LEFT", UIParent, "CENTER", 80, -230)
 	spawnHelper(self, 'targettarget', "BOTTOMLEFT", target, "TOPRIGHT", 25, 10)
 
+	local focus = spawnHelper(self, 'focus', "TOPLEFT", UIParent, "TOPLEFT", 320, -240)
+	spawnHelper(self, 'focustarget', "LEFT", focus, "RIGHT", 25, 0)
+
 	self:SetActiveStyle'Classic - Party'
-	local party = self:SpawnHeader(nil, nil, 'raid,party',
+	local party = self:SpawnHeader(nil, nil, 'party',
 		'showParty', true,
 		'yOffset', -40,
 		'xOffset', -40,
