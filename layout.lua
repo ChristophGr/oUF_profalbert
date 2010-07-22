@@ -64,12 +64,6 @@ local siValue = function(val)
 	end
 end
 
-oUF.Tags['classic:health'] = function(unit)
-	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
-	return siValue(UnitHealth(unit)) .. '/' .. siValue(UnitHealthMax(unit))
-end
-oUF.TagEvents['classic:health'] = oUF.TagEvents.missinghp
-
 oUF.Tags['profalbert:curhp'] = function(unit)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	return siValue(UnitHealth(unit))
@@ -89,32 +83,54 @@ oUF.Tags['profalbert:perhp'] = function(unit)
 end
 oUF.TagEvents['profalbert:perhp'] = oUF.TagEvents.missinghp
 
+oUF.Tags["profalbert:hpshort"] = function(unit)
+	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
+	return ("%s/%s"):format(siValueShort(UnitHealth(unit)), siValueShort(UnitHealthMax(unit)))
+end
+oUF.TagEvents['profalbert:hpshort'] = oUF.TagEvents.missinghp
+
 oUF.Tags['profalbert:power'] = function(unit)
 	local min, max = UnitPower(unit), UnitPowerMax(unit)
 	--if(min == 0 or max == 0 or not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	return ("%d/%d"):format(min, max)
 	--return siValue(min) .. '/' .. siValue(max)
 end
-oUF.TagEvents['classic:power'] = oUF.TagEvents.missingpp
+oUF.TagEvents['profalbert:power'] = oUF.TagEvents.missingpp
 
 oUF.Tags['profalbert:difficulty'] = function(u)
 		local l = UnitLevel(u)
 		return Hex(GetQuestDifficultyColor((l > 0) and l or 99))
 	end
 
-oUF.Tags["profalbert:raidcolor"] = function(unit)
-	local color = { r = 1, g = 1, b = 1, }
-	if UnitIsPlayer(unit) then
-		color = RAID_CLASS_COLORS[select(2, UnitClass(unit))] or white
-	else
-		color = FACTION_BAR_COLORS[UnitReaction("player", unit)]
-	end
+local function hex(color)
 	local r = math.floor(color.r * 255)
 	local g = math.floor(color.g * 255)
 	local b = math.floor(color.b * 255)
 	return("|cff%02x%02x%02x"):format(r,g,b)
 end
 
+local function raidcolor(unit)
+	local color = { r = 1, g = 1, b = 1, }
+	if UnitIsPlayer(unit) then
+		color = RAID_CLASS_COLORS[select(2, UnitClass(unit))] or white
+	else
+		color = FACTION_BAR_COLORS[UnitReaction("player", unit)]
+	end
+	return hex(color)
+end
+
+oUF.Tags["profalbert:raidcolor"] = raidcolor
+
+oUF.Tags["profalbert:name"] = function(unit, originalUnit)
+	if not originalUnit then
+		return UnitName(unit)
+	end
+	if unit == "vehicle" or unit:match("pet") then
+		return ("%s%s|r's %s%s"):format(raidcolor(originalUnit), UnitName(originalUnit), raidcolor(unit), UnitName(unit))
+	else
+		return UnitName(unit)
+	end
+end
 
 local PostUpdateHealth = function(health, unit, min, max)
 	--[[local self = health:GetParent()
@@ -232,6 +248,7 @@ local function makeHealthBar(self, height, anchors) -- above, portrait, right)
 	Health.colorTapping = true
 	Health.colorHappiness = true
 	Health.colorSmooth = true
+	-- Health.colorReaction = true -- does not behave as desired
 
 	Health.PostUpdate = PostUpdateHealth
 	Health.colorTapping = true
@@ -358,6 +375,7 @@ end
 local function makeInfoText(self, tag)
 	local Name = getFontString(self.Info)
 	Name:SetPoint("LEFT", self.Info, "LEFT")
+	Name:SetPoint("RIGHT", self.Info, "RIGHT")
 
 	self:Tag(Name, tag ) -- '[profalbert:difficulty][level][shortclassification] [raidcolor][name]'
 	self.Name = Name
@@ -439,7 +457,7 @@ local big = {
 	["pp-height"] = 12,
 	["hp-tag"] = '[dead][offline][profalbert:curhp]/[profalbert:maxhp] |cffcc3333[profalbert:perhp]%|r',
 	["pp-tag"] = '[profalbert:power]',
-	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][name]',
+	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][profalbert:name]',
 }
 
 local small = {
@@ -448,7 +466,7 @@ local small = {
 	["hp-height"] = 16,
 	["pp-height"] = 4,
 	["hp-point"] = { "CENTER" },
-	["info-tag"] = '[raidcolor][name]',
+	["info-tag"] = '[profalbert:raidcolor][profalbert:name]',
 }
 
 local focus = {
@@ -458,7 +476,7 @@ local focus = {
 	["pp-height"] = 4,
 	["hp-point"] = { "CENTER" },
 	["hp-tag"] = '[dead][profalbert:curhp]/[profalbert:maxhp]',
-	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [raidcolor][name]',
+	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][profalbert:name]',
 }
 
 local UnitSpecific = {
@@ -502,6 +520,11 @@ local UnitSpecific = {
 		Shared(self, big)
 		makePortrait(self)
 		makeLeader(self)
+	end,
+	pet = function(self)
+		local settings = CopyTable(small)
+		settings["hp-tag"] = "[profalbert:hpshort]"
+		Shared(self, settings)
 	end,
 }
 
