@@ -89,7 +89,6 @@ oUF.Tags['profalbert:perhp'] = function(unit)
 end
 oUF.TagEvents['profalbert:perhp'] = oUF.TagEvents.missinghp
 
-
 oUF.Tags['profalbert:power'] = function(unit)
 	local min, max = UnitPower(unit), UnitPowerMax(unit)
 	--if(min == 0 or max == 0 or not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
@@ -102,6 +101,20 @@ oUF.Tags['profalbert:difficulty'] = function(u)
 		local l = UnitLevel(u)
 		return Hex(GetQuestDifficultyColor((l > 0) and l or 99))
 	end
+
+oUF.Tags["profalbert:raidcolor"] = function(unit)
+	local color = { r = 1, g = 1, b = 1, }
+	if UnitIsPlayer(unit) then
+		color = RAID_CLASS_COLORS[select(2, UnitClass(unit))] or white
+	else
+		color = FACTION_BAR_COLORS[UnitReaction("player", unit)]
+	end
+	local r = math.floor(color.r * 255)
+	local g = math.floor(color.g * 255)
+	local b = math.floor(color.b * 255)
+	return("|cff%02x%02x%02x"):format(r,g,b)
+end
+
 
 local PostUpdateHealth = function(health, unit, min, max)
 	--[[local self = health:GetParent()
@@ -260,7 +273,7 @@ end
 local function makeLeader(self)
 	local Leader = self:CreateTexture(nil, "OVERLAY")
 	Leader:SetSize(16, 16)
-	Leader:SetPoint("BOTTOM", self, "TOP", 0, -7)
+	Leader:SetPoint("TOPLEFT", self, "TOPLEFT", -8, 8)
 	self.Leader = Leader
 	return Leader
 end
@@ -426,7 +439,7 @@ local big = {
 	["pp-height"] = 12,
 	["hp-tag"] = '[dead][offline][profalbert:curhp]/[profalbert:maxhp] |cffcc3333[profalbert:perhp]%|r',
 	["pp-tag"] = '[profalbert:power]',
-	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [raidcolor][name]',
+	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][name]',
 }
 
 local small = {
@@ -535,4 +548,19 @@ oUF:Factory(function(self)
 		'columnSpacing', 15
 	)
 	party:SetPoint("TOPLEFT", 30, -30)
+
+	local ptcontainer = CreateFrame('Frame', nil, party, "SecureHandlerStateTemplate")
+	-- RegisterStateDriver(ptcontainer, "visibility", "[group:raid]hide;show")
+	ptcontainer:SetPoint("TOPLEFT", party, "TOPRIGHT", 35, 0)
+
+	self:SetActiveStyle("Classic - Targettarget")
+	local pts = {}
+	pts[1] = oUF:Spawn("party1target")
+	pts[1]:SetParent(ptcontainer)
+	pts[1]:SetPoint("TOPLEFT", ptcontainer, "TOPLEFT")
+	for i =2, 4 do
+		pts[i] = oUF:Spawn("party"..i.."target")
+		pts[i]:SetPoint("TOP", pts[i-1], "BOTTOM", 0, -50)
+		pts[i]:SetParent(ptcontainer)
+	end
 end)
