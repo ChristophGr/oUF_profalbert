@@ -83,10 +83,11 @@ oUF.Tags['profalbert:perhp'] = function(unit)
 end
 oUF.TagEvents['profalbert:perhp'] = oUF.TagEvents.missinghp
 
-oUF.Tags["profalbert:hpshort"] = function(unit)
+local function hpshort(unit)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	return ("%s/%s"):format(siValueShort(UnitHealth(unit)), siValueShort(UnitHealthMax(unit)))
 end
+oUF.Tags["profalbert:hpshort"] = hpshort
 oUF.TagEvents['profalbert:hpshort'] = oUF.TagEvents.missinghp
 
 oUF.Tags['profalbert:power'] = function(unit)
@@ -129,6 +130,17 @@ oUF.Tags["profalbert:name"] = function(unit, originalUnit)
 		return ("%s%s|r's %s%s"):format(raidcolor(originalUnit), UnitName(originalUnit), raidcolor(unit), UnitName(unit))
 	else
 		return UnitName(unit)
+	end
+end
+
+oUF.Tags["profalbert:raidhp"] = function(unit, origUnit)
+	if origUnit then
+		local deficit = UnitHealth(unit) - UnitHealthMax(unit)
+		if deficit < 0 then
+			return deficit
+		end
+	else
+		return hpshort(unit)
 	end
 end
 
@@ -526,6 +538,11 @@ local UnitSpecific = {
 		settings["hp-tag"] = "[profalbert:hpshort]"
 		Shared(self, settings)
 	end,
+	raid = function(self)
+		local settings = CopyTable(small)
+		settings["hp-tag"] = "[profalbert:raidhp]"
+		Shared(self, settings)
+	end,
 }
 
 oUF:RegisterStyle("Classic", function(self, unit)
@@ -585,5 +602,25 @@ oUF:Factory(function(self)
 		pts[i] = oUF:Spawn("party"..i.."target")
 		pts[i]:SetPoint("TOP", pts[i-1], "BOTTOM", 0, -50)
 		pts[i]:SetParent(ptcontainer)
+	end
+
+	-- raid frames
+	oUF:SetActiveStyle("Classic - Raid")
+	local raid = {}
+	for i = 1, 8 do
+		raid[i] = oUF:SpawnHeader("oUF_Raid"..i, nil, 'raid',
+			-- "template", "oUF_profalbert_raid",
+			"yOffset", -3,
+			"groupFilter", tostring(i),
+			"showRaid", true,
+			"point", "TOP"
+		)
+		if i == 1 then
+			raid[i]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 20, -75)
+		elseif i == 6 then
+			raid[i]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 20, (-80 - 33*5))
+		else
+			raid[i]:SetPoint("TOPLEFT", raid[i-1], "TOPRIGHT", 20, 0)
+		end
 	end
 end)
