@@ -164,13 +164,14 @@ oUF.Tags["profalbert:name"] = function(unit, originalUnit)
 end
 
 oUF.Tags["profalbert:raidhp"] = function(unit, origUnit)
+	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	if origUnit then
+		return hpshort(unit)
+	else
 		local deficit = UnitHealth(unit) - UnitHealthMax(unit)
 		if deficit < 0 then
 			return deficit
 		end
-	else
-		return hpshort(unit)
 	end
 end
 
@@ -330,6 +331,13 @@ local function makeLeader(self)
 	return Leader
 end
 
+local function makeRange(self)
+	self.SpellRange = {
+		insideAlpha = 1,
+		outsideAlpha = 0.6,
+	}
+end
+
 local function makeResting(self)
 	local resting = self.Health:CreateTexture(nil, "OVERLAY") -- use self.Health so that it comes before the portrait
 	resting:SetHeight(16)
@@ -455,31 +463,43 @@ end--]]
 	local Health = makeHealthBar(self, points)
 end--]]
 
-local DoAuras = function(self)
-	if true then return end
+local makeBuffs = function(self, settings)
 	-- Buffs
 	local Buffs = CreateFrame("Frame", nil, self)
-	Buffs:SetPoint("BOTTOM", self, "TOP")
+	
 	Buffs:SetPoint'LEFT'
 	Buffs:SetPoint'RIGHT'
-	Buffs:SetHeight(17)
-
-	Buffs.size = 17
-	Buffs.num = math.floor(self:GetAttribute'initial-width' / Buffs.size + .5)
+	Buffs:SetHeight(16)
+	
+	Buffs.size = 16
+	for k,v in pairs(settings) do
+		Buffs[k] = v
+	end
 
 	self.Buffs = Buffs
+	return Buffs
+	
+end
 
+local function makeDebuffs(self, settings)
 	-- Debuffs
 	local Debuffs = CreateFrame("Frame", nil, self)
-	Debuffs:SetPoint("TOP", self, "BOTTOM")
 	Debuffs:SetPoint'LEFT'
 	Debuffs:SetPoint'RIGHT'
 	Debuffs:SetHeight(20)
 
+	Debuffs:SetPoint("TOPLEFT", self, "TOPRIGHT",1.5,0)
 	Debuffs.initialAnchor = "TOPLEFT"
-	Debuffs.size = 20
+	Debuffs["growth-x"] = "RIGHT"
+	Debuffs["growth-y"] = "DOWN"
+
+	Debuffs:SetHeight(settings.size * settings.y)
+	Debuffs:SetWidth(settings.size * settings.x)
+
+	Debuffs.initialAnchor = "TOPLEFT"
+	Debuffs.size = settings.size
 	Debuffs.showDebuffType = true
-	Debuffs.num = math.floor(self:GetAttribute'initial-width' / Debuffs.size + .5)
+	Debuffs.num = settings.x * settings.y
 
 	self.Debuffs = Debuffs
 end
@@ -493,6 +513,18 @@ local big = {
 	["hp-tag"] = '[dead][offline][profalbert:HealthWithPer]',
 	["pp-tag"] = '[profalbert:power]',
 	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][profalbert:name]',
+	["buffs"] = {
+		num = 6,
+		initialAnchor = "TOPLEFT",
+		["growth-y"] = "DOWN",
+		["growth-x"] = "RIGHT",
+		size = 16,
+	},
+	["debuffs"] = {
+		x = 2,
+		y = 3,
+		size = 20,
+	},
 }
 
 local small = {
@@ -510,8 +542,20 @@ local focus = {
 	["hp-height"] = 18,
 	["pp-height"] = 4,
 	["hp-point"] = { "CENTER" },
-	["hp-tag"] = '[dead][profalbert:curhp]/[profalbert:maxhp]',
+	["hp-tag"] = '[dead][profalbert:hpshort]',
 	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][profalbert:name]',
+	["buffs"] = {
+		num = 4,
+		initialAnchor = "TOPLEFT",
+		["growth-y"] = "DOWN",
+		["growth-x"] = "RIGHT",
+		size = 12,
+	},
+	["debuffs"] = {
+		x = 1,
+		y = 3,
+		size = 12,
+	},
 }
 
 local raid = {
@@ -519,7 +563,13 @@ local raid = {
 	["initial-height"] = 30,
 	["hp-height"] = 18,
 	["pp-height"] = 3,
-	["hp-tag"] = "[profalbert:raidhp]",
+	["hp-tag"] = "[dead][profalbert:raidhp]",
+	["info-tag"] = small["info-tag"],
+	["debuffs"] = {
+		x = 1,
+		y = 3,
+		size = 10,
+	},
 }
 
 local UnitSpecific = {
@@ -527,14 +577,16 @@ local UnitSpecific = {
 		local settings = CopyTable(big)
 		Shared(self, settings)
 		makePortrait(self)
-		DoAuras(self)
+		local buffs = makeBuffs(self, settings.buffs)
+		buffs:SetPoint("TOP", self, "BOTTOM")
+		makeDebuffs(self, settings.debuffs)
 	end,
 	targettarget = function(self)
 		local settings = CopyTable(small)
 		settings["hp-point"] = { "RIGHT", }
 		settings["hp-tag"] = "[profalbert:curhp] [profalbert:perhp]"
 		Shared(self, settings)
-		DoAuras(self)
+		--DoAuras(self)
 	end,
 	player = function(self)
 		local settings = CopyTable(big)
@@ -552,6 +604,10 @@ local UnitSpecific = {
 	end,
 	focus = function(self)
 		Shared(self, focus)
+		makeRange(self)
+		local buffs = makeBuffs(self, focus.buffs)
+		buffs:SetPoint("TOP", self, "BOTTOM")
+		makeDebuffs(self, focus.debuffs)
 	end,
 	focustarget = function(self)
 		local settings = CopyTable(small)
@@ -563,6 +619,7 @@ local UnitSpecific = {
 		Shared(self, big)
 		makePortrait(self)
 		makeLeader(self)
+		makeRange(self)
 	end,
 	pet = function(self)
 		local settings = CopyTable(small)
@@ -572,6 +629,7 @@ local UnitSpecific = {
 	raid = function(self)
 		Shared(self, raid)
 		makeLeader(self)
+		makeRange(self)
 	end,
 }
 
