@@ -64,6 +64,40 @@ local siValue = function(val)
 	end
 end
 
+local function healthOrAFK(unit, orig)
+	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
+	local min, max = UnitHealth(unit), UnitHealthMax(unit)
+	if UnitIsAFK(unit) then
+		if min == max then
+			return AFK
+		else
+			return ("|cff000000%d/%d|r"):format(siValue(min), siValue(max))
+		end
+	else
+		return ("%s/%s"):format(siValue(min), siValue(max))
+	end
+end
+
+oUF.Tags['profalbert:Health'] = healthOrAFK
+oUF.TagEvents['profalbert:Health'] = oUF.TagEvents.missinghp
+
+local function perhp(unit)
+	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
+	local val = UnitHealth(unit) / UnitHealthMax(unit) * 100
+	return ("|cffcc3333%s%%|r"):format(round(val, 1))
+end
+
+oUF.Tags['profalbert:HealthWithPer'] = function(unit)
+	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
+	local min, max = UnitHealth(unit), UnitHealthMax(unit)
+	if UnitIsAFK(unit) and min == max then
+		return AFK
+	else
+		return ("%s %s"):format(healthOrAFK(unit),perhp(unit))
+	end
+end
+oUF.TagEvents['profalbert:HealthWithPer'] = oUF.TagEvents.missinghp
+
 oUF.Tags['profalbert:curhp'] = function(unit)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	return siValue(UnitHealth(unit))
@@ -76,11 +110,7 @@ oUF.Tags['profalbert:maxhp'] = function(unit)
 end
 oUF.TagEvents['profalbert:maxhp'] = oUF.TagEvents.missinghp
 
-oUF.Tags['profalbert:perhp'] = function(unit)
-	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
-	local val = UnitHealth(unit) / UnitHealthMax(unit) * 100
-	return round(val, 1)
-end
+oUF.Tags['profalbert:perhp'] = perhp
 oUF.TagEvents['profalbert:perhp'] = oUF.TagEvents.missinghp
 
 local function hpshort(unit)
@@ -144,20 +174,21 @@ oUF.Tags["profalbert:raidhp"] = function(unit, origUnit)
 	end
 end
 
+local PreUpdateHealth = function(health, unit)
+	health.colorReaction = not UnitIsPlayer(unit)
+end
+
 local PostUpdateHealth = function(health, unit, min, max)
-	--[[local self = health:GetParent()
+	local self = health:GetParent()
 	if(UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
-		self:SetBackdropBorderColor(.3, .3, .3)
-	else
-		local r, g, b = UnitSelectionColor(unit)
-		self:SetBackdropBorderColor(r, g, b)
+		health:SetStatusBarColor(.3, .3, .3)
 	end
 
 	if(UnitIsDead(unit)) then
 		health:SetValue(0)
 	elseif(UnitIsGhost(unit)) then
 		health:SetValue(0)
-	end--]]
+	end
 end
 
 local PostUpdatePower = function(power, unit,min, max)
@@ -263,6 +294,7 @@ local function makeHealthBar(self, height, anchors) -- above, portrait, right)
 	-- Health.colorReaction = true -- does not behave as desired
 
 	Health.PostUpdate = PostUpdateHealth
+	Health.PreUpdate = PreUpdateHealth
 	Health.colorTapping = true
 	Health.colorDisconnected = true
 
@@ -284,16 +316,7 @@ local function makeHealthValue(self, tag, point)
 	else
 		HealthPoints:SetPoint("CENTER")
 	end
-
-	self:Tag(HealthPoints, tag)
-
-	self.Health.value = HealthPoints
-end
-
-local function makeHealthValue2(self, tag)
-	local HealthPoints = getFontString(self.Health)
-	HealthPoints:SetPoint("CENTER")
-	
+	HealthPoints.frequentUpdates = true
 	self:Tag(HealthPoints, tag)
 
 	self.Health.value = HealthPoints
@@ -467,7 +490,7 @@ local big = {
 	["hp-height"] = 22,
 	["hp-point"] = { "RIGHT" },
 	["pp-height"] = 12,
-	["hp-tag"] = '[dead][offline][profalbert:curhp]/[profalbert:maxhp] |cffcc3333[profalbert:perhp]%|r',
+	["hp-tag"] = '[dead][offline][profalbert:HealthWithPer]',
 	["pp-tag"] = '[profalbert:power]',
 	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][profalbert:name]',
 }
@@ -491,24 +514,32 @@ local focus = {
 	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][profalbert:name]',
 }
 
+local raid = {
+	["initial-width"] = 60,
+	["initial-height"] = 30,
+	["hp-height"] = 18,
+	["pp-height"] = 3,
+	["hp-tag"] = "[profalbert:raidhp]",
+}
+
 local UnitSpecific = {
 	target = function(self)
-		Shared(self, big)
+		local settings = CopyTable(big)
+		Shared(self, settings)
 		makePortrait(self)
 		DoAuras(self)
 	end,
-
 	targettarget = function(self)
 		local settings = CopyTable(small)
 		settings["hp-point"] = { "RIGHT", }
-		settings["hp-tag"] = "[profalbert:curhp] |cffcc3333[profalbert:perhp]%|r"
+		settings["hp-tag"] = "[profalbert:curhp] [profalbert:perhp]"
 		Shared(self, settings)
 		DoAuras(self)
 	end,
 	player = function(self)
 		local settings = CopyTable(big)
 		settings["hp-point"] = nil
-		settings["hp-tag"] = '[dead][profalbert:curhp]/[profalbert:maxhp]'
+		settings["hp-tag"] = '[dead][profalbert:Health]'
 		Shared(self, settings)
 		--[[self.Health.value:ClearAllPoints()
 		self.Health.value:SetPoint("RIGHT")--]]
@@ -524,7 +555,7 @@ local UnitSpecific = {
 	end,
 	focustarget = function(self)
 		local settings = CopyTable(small)
-		settings["hp-tag"] = "[profalbert:curhp] |cffcc3333[profalbert:perhp]%|r"
+		settings["hp-tag"] = "[profalbert:curhp] [profalbert:perhp]"
 		settings["hp-point"] = { "RIGHT", }
 		Shared(self, settings)
 	end,
@@ -539,9 +570,8 @@ local UnitSpecific = {
 		Shared(self, settings)
 	end,
 	raid = function(self)
-		local settings = CopyTable(small)
-		settings["hp-tag"] = "[profalbert:raidhp]"
-		Shared(self, settings)
+		Shared(self, raid)
+		makeLeader(self)
 	end,
 }
 
