@@ -64,6 +64,11 @@ local siValue = function(val)
 	end
 end
 
+local function makeHealthTag(name, func)
+	oUF.Tags[name] = func
+	oUF.TagEvents[name] = oUF.TagEvents.missinghp
+end
+
 local function healthOrAFK(unit, orig)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	local min, max = UnitHealth(unit), UnitHealthMax(unit)
@@ -78,8 +83,16 @@ local function healthOrAFK(unit, orig)
 	end
 end
 
-oUF.Tags['profalbert:Health'] = healthOrAFK
-oUF.TagEvents['profalbert:Health'] = oUF.TagEvents.missinghp
+makeHealthTag("profalbert:Health", healthOrAFK)
+
+local function missinghp(unit)
+	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
+	local current = UnitHealthMax(unit) - UnitHealth(unit)
+	if(current > 0) then
+		return ("|cffff8080-%s|r"):format(siValue(current))
+	end
+end
+makeHealthTag("profalbert:missinghp", missinghp)
 
 local function perhp(unit)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
@@ -87,7 +100,7 @@ local function perhp(unit)
 	return ("|cffcc3333%s%%|r"):format(round(val, 1))
 end
 
-oUF.Tags['profalbert:HealthWithPer'] = function(unit)
+makeHealthTag("profalbert:HealthWithPer", function(unit)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	local min, max = UnitHealth(unit), UnitHealthMax(unit)
 	if UnitIsAFK(unit) and min == max then
@@ -95,30 +108,43 @@ oUF.Tags['profalbert:HealthWithPer'] = function(unit)
 	else
 		return ("%s %s"):format(healthOrAFK(unit),perhp(unit))
 	end
-end
-oUF.TagEvents['profalbert:HealthWithPer'] = oUF.TagEvents.missinghp
+end)
 
-oUF.Tags['profalbert:curhp'] = function(unit)
+makeHealthTag("profalbert:curhp", function(unit)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	return siValue(UnitHealth(unit))
-end
-oUF.TagEvents['profalbert:curhp'] = oUF.TagEvents.missinghp
+end)
 
-oUF.Tags['profalbert:maxhp'] = function(unit)
+makeHealthTag("profalbert:maxhp", function(unit)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	return siValue(UnitHealthMax(unit))
-end
-oUF.TagEvents['profalbert:maxhp'] = oUF.TagEvents.missinghp
+end)
 
-oUF.Tags['profalbert:perhp'] = perhp
-oUF.TagEvents['profalbert:perhp'] = oUF.TagEvents.missinghp
+makeHealthTag("profalbert:perhp", perhp)
 
 local function hpshort(unit)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	return ("%s/%s"):format(siValueShort(UnitHealth(unit)), siValueShort(UnitHealthMax(unit)))
 end
-oUF.Tags["profalbert:hpshort"] = hpshort
-oUF.TagEvents['profalbert:hpshort'] = oUF.TagEvents.missinghp
+makeHealthTag("profalbert:hpshort", hpshort)
+
+makeHealthTag("profalbert:raidhp", function(unit, origUnit)
+	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
+	if origUnit then
+		return hpshort(unit)
+	else
+		local min, max = UnitHealth(unit), UnitHealthMax(unit)
+		if UnitIsAFK(unit) then
+			if min == max then
+				return AFK
+			else
+				return ("|cff000000%s|r"):format(siValue(min - max))
+			end
+		else
+			return missinghp(unit)
+		end
+	end
+end)
 
 oUF.Tags['profalbert:power'] = function(unit)
 	local min, max = UnitPower(unit), UnitPowerMax(unit)
@@ -129,9 +155,9 @@ end
 oUF.TagEvents['profalbert:power'] = oUF.TagEvents.missingpp
 
 oUF.Tags['profalbert:difficulty'] = function(u)
-		local l = UnitLevel(u)
-		return Hex(GetQuestDifficultyColor((l > 0) and l or 99))
-	end
+	local l = UnitLevel(u)
+	return Hex(GetQuestDifficultyColor((l > 0) and l or 99))
+end
 
 local function hex(color)
 	local r = math.floor(color.r * 255)
@@ -160,18 +186,6 @@ oUF.Tags["profalbert:name"] = function(unit, originalUnit)
 		return ("%s%s|r's %s%s"):format(raidcolor(originalUnit), UnitName(originalUnit), raidcolor(unit), UnitName(unit))
 	else
 		return UnitName(unit)
-	end
-end
-
-oUF.Tags["profalbert:raidhp"] = function(unit, origUnit)
-	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
-	if origUnit then
-		return hpshort(unit)
-	else
-		local deficit = UnitHealth(unit) - UnitHealthMax(unit)
-		if deficit < 0 then
-			return deficit
-		end
 	end
 end
 
@@ -424,7 +438,31 @@ local function makeInfoText(self, tag)
 	self.Name = Name
 end
 
-local function Shared(self, settings)
+local hptags = {
+	player = '[dead][profalbert:Health]',
+	pet = "[profalbert:hpshort]",
+	target = '[dead][offline][profalbert:HealthWithPer]',
+	targettarget = "[profalbert:curhp] [profalbert:perhp]",
+	focus = '[dead][offline][profalbert:hpshort]',
+	focustarget = "[profalbert:curhp] [profalbert:perhp]",
+	party = '[dead][offline][profalbert:Health] [profalbert:missinghp]',
+	partytarget = "[profalbert:curhp] [profalbert:perhp]",
+	partypet = '[dead][profalbert:Health]',
+	raid = "[dead][offline][profalbert:raidhp]",
+	maintank = "[dead][offline][profalbert:curhp] [profalbert:missinghp]",
+}
+hptags.vehicle = hptags.pet
+
+do
+	local function getTag(self, key)
+		local key2 = key:gsub("%d+","")
+		return rawget(self, key2) or "[profalbert:Health]"
+	end
+	setmetatable(hptags, { __index = getTag, } )
+end
+
+local function Shared(self, settings, unit)
+	local unit = unit or self.unit
 	makeCommon(self, settings)
 	local bbheight = settings["bb-height"] or settings["initial-height"] - settings["hp-height"] - settings["pp-height"]
 	
@@ -436,8 +474,8 @@ local function Shared(self, settings)
 		{ "TOP", bb, "BOTTOM", },
 	}
 	local Health = makeHealthBar(self, settings["hp-height"] or 25, anchors)
-	if settings["hp-tag"] then
-		makeHealthValue(self, settings["hp-tag"], settings["hp-point"])
+	if unit then
+		makeHealthValue(self, hptags[unit], settings["hp-point"])
 	end
 	anchors[1] = { "TOP", Health, "BOTTOM", }
 	local Power = DoPower(self, anchors)
@@ -508,9 +546,7 @@ local big = {
 	["initial-width"] = 140,
 	["initial-height"] = 48,
 	["hp-height"] = 22,
-	["hp-point"] = { "RIGHT" },
 	["pp-height"] = 12,
-	["hp-tag"] = '[dead][offline][profalbert:HealthWithPer]',
 	["pp-tag"] = '[profalbert:power]',
 	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][profalbert:name]',
 	["buffs"] = {
@@ -542,7 +578,6 @@ local focus = {
 	["hp-height"] = 18,
 	["pp-height"] = 4,
 	["hp-point"] = { "CENTER" },
-	["hp-tag"] = '[dead][profalbert:hpshort]',
 	["info-tag"] = '[profalbert:difficulty][level][shortclassification] [profalbert:raidcolor][profalbert:name]',
 	["buffs"] = {
 		num = 4,
@@ -563,7 +598,6 @@ local raid = {
 	["initial-height"] = 30,
 	["hp-height"] = 18,
 	["pp-height"] = 3,
-	["hp-tag"] = "[dead][profalbert:raidhp]",
 	["info-tag"] = small["info-tag"],
 	["debuffs"] = {
 		x = 1,
@@ -575,6 +609,7 @@ local raid = {
 local UnitSpecific = {
 	target = function(self)
 		local settings = CopyTable(big)
+		settings["hp-point"] = { "RIGHT" },
 		Shared(self, settings)
 		makePortrait(self)
 		local buffs = makeBuffs(self, settings.buffs)
@@ -584,14 +619,12 @@ local UnitSpecific = {
 	targettarget = function(self)
 		local settings = CopyTable(small)
 		settings["hp-point"] = { "RIGHT", }
-		settings["hp-tag"] = "[profalbert:curhp] [profalbert:perhp]"
 		Shared(self, settings)
 		--DoAuras(self)
 	end,
 	player = function(self)
 		local settings = CopyTable(big)
 		settings["hp-point"] = nil
-		settings["hp-tag"] = '[dead][profalbert:Health]'
 		Shared(self, settings)
 		--[[self.Health.value:ClearAllPoints()
 		self.Health.value:SetPoint("RIGHT")--]]
@@ -611,25 +644,30 @@ local UnitSpecific = {
 	end,
 	focustarget = function(self)
 		local settings = CopyTable(small)
-		settings["hp-tag"] = "[profalbert:curhp] [profalbert:perhp]"
 		settings["hp-point"] = { "RIGHT", }
 		Shared(self, settings)
 	end,
-	party = function(self)
-		Shared(self, big)
+	party = function(self, unit)
+		Shared(self, big, unit)
 		makePortrait(self)
 		makeLeader(self)
 		makeRange(self)
 	end,
 	pet = function(self)
 		local settings = CopyTable(small)
-		settings["hp-tag"] = "[profalbert:hpshort]"
 		Shared(self, settings)
 	end,
-	raid = function(self)
-		Shared(self, raid)
+	raid = function(self, unit)
+		Shared(self, raid, unit)
 		makeLeader(self)
 		makeRange(self)
+	end,
+	maintank = function(self, unit)
+		local settings = CopyTable(small)
+		settings["hp-point"] = { "RIGHT", }
+		Shared(self, settings, unit)
+		makeRange(self)
+		self:Tag(self.Health.value, hptags.maintank)
 	end,
 }
 
@@ -719,8 +757,9 @@ oUF:Factory(function(self)
 		end
 	end
 
+	oUF:SetActiveStyle("Classic - Maintank")
 	local mts = self:SpawnHeader(nil, nil, 'raid',
-		-- "template", "oUF_profalbert_mtt",
+		"template", "oUF_profalbert_mtt",
 		"showRaid", true,
 		"yOffset", 1,
 		"groupBy", "ROLE",
