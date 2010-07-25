@@ -671,8 +671,7 @@ local function makeDebuffHighlighting(self)
 	self.DebuffHighlightFilter = not unfiltered -- only show debuffs I can cure, if I can cure any
 end
 
--- TODO banzai, pet-ttl
--- TODO debuff hightlighting, combo-points, showplayer-heal
+-- TODO banzai, pet-ttl, combo-points
 
 local UnitSpecific = {
 	target = function(self)
@@ -905,4 +904,41 @@ oUF:Factory(function(self)
 			frame:Hide()
 		end
 	end)
+
+	local healspec = {
+		["Cedwani"] = 2,
+		["Farolgin"] = 1,
+	}
+
+	local playerHealSpec = healspec[UnitName("player")]
+	if playerHealSpec then
+		local SpecFrame = CreateFrame("Frame", nil, UIParent, "SecureHandlerStateTemplate")
+		SpecFrame:SetFrameRef("party", party)
+		SpecFrame:Execute([[
+			party = self:GetFrameRef("party")
+		]])
+		SpecFrame:SetAttribute("_onstate-healer", [[
+			if newstate == "healer" then
+				party:SetAttribute("showPlayer", true)
+			else
+				party:SetAttribute("showPlayer", false)
+			end
+		]])
+		RegisterStateDriver(SpecFrame, "healer", ("[spec:%d]healer;nohealer"):format(playerHealSpec))
+
+		ptcontainer:SetFrameRef("party2", party)
+		ptcontainer:Execute([[
+			party2 = self:GetFrameRef("party2")
+		]])
+		ptcontainer:SetAttribute("_onstate-healer", [[
+			if newstate == "healer" then
+				self:SetPoint("TOPLEFT", party2, "TOPRIGHT", 35, -81)
+			else
+				self:SetPoint("TOPLEFT", party2, "TOPRIGHT", 35, 0)
+			end
+		]])
+		RegisterStateDriver(ptcontainer, "healer", ("[spec:%d]healer;nohealer"):format(playerHealSpec))
+	else
+		party:SetAttribute("showPlayer", false)
+	end
 end)
