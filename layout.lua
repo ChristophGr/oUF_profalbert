@@ -1,7 +1,6 @@
---[[-------------------------------------------------------------------------
-  Trond A Ekseth grants anyone the right to use this work for any purpose,
-  without any conditions, unless such conditions are required by law.
----------------------------------------------------------------------------]]
+local name, ns = ...
+local oUF = ns.oUF or _G[ assert( GetAddOnMetadata(name, "X-oUF"), "X-oUF metadata missing in parent addon.")]
+assert( oUF, "Unable to locate oUF." )
 
 local LSM = LibStub("LibSharedMedia-3.0")
 
@@ -282,6 +281,14 @@ local function makeCommon(self, settings)
 	self:SetAttribute("initial-height", settings["initial-height"] or 60)
 end
 
+local function makeRaidIcons(self)
+	local icon = self:CreateTexture(nil, "OVERLAY")
+	icon:SetHeight(16)
+	icon:SetWidth(16)
+	icon:SetPoint("CENTER", self, "TOP")
+	self.RaidIcon = icon
+end
+
 local function makeBlankBar(self, height)
 	local bb = CreateFrame("StatusBar", nil, self)
 	bb:SetHeight(height)
@@ -466,6 +473,7 @@ end
 local function Shared(self, settings, unit)
 	local unit = unit or self.unit
 	makeCommon(self, settings)
+	makeRaidIcons(self)
 	local bbheight = settings["bb-height"] or settings["initial-height"] - settings["hp-height"] - settings["pp-height"]
 	
 	local bb = makeBlankBar(self, bbheight)
@@ -638,7 +646,25 @@ local function makeMasterlooter(self)
 	masterlooter:SetPoint("TOPRIGHT", self, "TOPRIGHT", 8, 8)
 	self.MasterLooter = masterlooter
 end
--- TODO banzai, masterlooter, pet-ttl, lfd-role, raid-targets, readycheck
+
+-- lfd-role, raid-targets, readycheck
+local function makeLFDRole(self)
+	local lfdrole = self:CreateTexture(nil, "OVERLAY")
+	lfdrole:SetHeight(16)
+	lfdrole:SetWidth(16)
+	lfdrole:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", -8, -8)
+	self.LFDRole = lfdrole
+end
+
+local function makeReadyCheck(self)
+	local readycheck = self:CreateTexture(nil, "OVERLAY")
+	readycheck:SetHeight(16)
+	readycheck:SetWidth(16)
+	readycheck:SetPoint("TOPLEFT", hp, "RIGHT", -8, 8)
+	self.ReadyCheck = readycheck
+end
+
+-- TODO banzai, pet-ttl
 -- TODO debuff hightlighting, combo-points, showplayer-heal
 
 local UnitSpecific = {
@@ -668,6 +694,8 @@ local UnitSpecific = {
 		makeResting(self)
 		makeLeader(self)
 		makeMasterlooter(self)
+		makeLFDRole(self)
+		makeReadyCheck(self)
 
 		RuneFrame:ClearAllPoints()
 		RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
@@ -692,6 +720,7 @@ local UnitSpecific = {
 		makeLeader(self)
 		makeRange(self)
 		makeMasterlooter(self)
+		makeLFDRole(self)
 	end,
 	pet = function(self)
 		local settings = CopyTable(small)
@@ -703,6 +732,7 @@ local UnitSpecific = {
 		makeRange(self)
 		makeEarthShieldIcon(self)
 		makeMasterlooter(self)
+		makeReadyCheck(self)
 	end,
 	maintank = function(self, unit)
 		local settings = CopyTable(small)
@@ -711,6 +741,7 @@ local UnitSpecific = {
 		makeRange(self)
 		self:Tag(self.Health.value, hptags.maintank)
 		makeEarthShieldIcon(self)
+		makeReadyCheck(self)
 	end,
 }
 
