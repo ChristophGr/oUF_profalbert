@@ -664,6 +664,13 @@ local function makeReadyCheck(self)
 	self.ReadyCheck = readycheck
 end
 
+local _, playerClass = UnitClass("player")
+local function makeDebuffHighlighting(self)
+	self.DebuffHighlightBackdrop = true -- oUF_DebuffHighlight Support, using the backdrop
+	local unfiltered = (playerClass == "ROGUE" or playerClass == "WARRIOR")
+	self.DebuffHighlightFilter = not unfiltered -- only show debuffs I can cure, if I can cure any
+end
+
 -- TODO banzai, pet-ttl
 -- TODO debuff hightlighting, combo-points, showplayer-heal
 
@@ -696,6 +703,7 @@ local UnitSpecific = {
 		makeMasterlooter(self)
 		makeLFDRole(self)
 		makeReadyCheck(self)
+		makeDebuffHighlighting(self)
 
 		RuneFrame:ClearAllPoints()
 		RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
@@ -708,6 +716,7 @@ local UnitSpecific = {
 		local buffs = makeBuffs(self, focus.buffs)
 		buffs:SetPoint("TOP", self, "BOTTOM")
 		makeDebuffs(self, focus.debuffs)
+		makeDebuffHighlighting(self)
 	end,
 	focustarget = function(self)
 		local settings = CopyTable(small)
@@ -721,10 +730,12 @@ local UnitSpecific = {
 		makeRange(self)
 		makeMasterlooter(self)
 		makeLFDRole(self)
+		makeDebuffHighlighting(self)
 	end,
 	pet = function(self)
 		local settings = CopyTable(small)
 		Shared(self, settings)
+		makeDebuffHighlighting(self)
 	end,
 	raid = function(self, unit)
 		Shared(self, raid, unit)
@@ -733,6 +744,7 @@ local UnitSpecific = {
 		makeEarthShieldIcon(self)
 		makeMasterlooter(self)
 		makeReadyCheck(self)
+		makeDebuffHighlighting(self)
 	end,
 	maintank = function(self, unit)
 		local settings = CopyTable(small)
@@ -742,6 +754,7 @@ local UnitSpecific = {
 		self:Tag(self.Health.value, hptags.maintank)
 		makeEarthShieldIcon(self)
 		makeReadyCheck(self)
+		makeDebuffHighlighting(self)
 	end,
 }
 
