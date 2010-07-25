@@ -160,6 +160,7 @@ oUF.Tags['profalbert:difficulty'] = function(u)
 end
 
 local function hex(color)
+	if not color then return "|cffffffff" end
 	local r = math.floor(color.r * 255)
 	local g = math.floor(color.g * 255)
 	local b = math.floor(color.b * 255)
@@ -183,11 +184,12 @@ oUF.Tags["profalbert:name"] = function(unit, originalUnit)
 		return UnitName(unit)
 	end
 	if unit == "vehicle" or unit:match("pet") then
-		return ("%s%s|r's %s%s"):format(raidcolor(originalUnit), UnitName(originalUnit), raidcolor(unit), UnitName(unit))
+		return ("%s%s|r's %s%s"):format(raidcolor(originalUnit) or "", UnitName(originalUnit) or "", raidcolor(unit) or "", UnitName(unit) or "")
 	else
 		return UnitName(unit)
 	end
 end
+oUF.TagEvents["profalbert:name"] = "UNIT_NAME_UPDATE UNIT_ENTERING_VEHICLE UNIT_ENTERED_VEHICLE UNIT_EXITING_VEHICLE UNIT_EXITED_VEHICLE"
 
 local PreUpdateHealth = function(health, unit)
 	health.colorReaction = not UnitIsPlayer(unit)

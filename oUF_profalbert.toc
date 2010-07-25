@@ -4,8 +4,10 @@
 ## Notes: profalbert style oUF layout
 ## OptionalDeps: SharedMedia, LibQuickHealth-2.0, oUF_HealComm4, oUF_Banzai, oUF_DebuffHighlight, oUF_Readycheck, oUF_RuneBar, oUF_SpellRange
 ## RequiredDeps: oUF
+## X-oUF: oUF
 ## SavedVarialbes: oUF_profalbert_healer
 
 portrait2.lua
 layout.xml
 layout.lua
+vehiclefix.lua
