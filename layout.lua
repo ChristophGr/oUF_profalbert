@@ -606,6 +606,39 @@ local raid = {
 	},
 }
 
+local function makeEarthShieldIcon(self)
+	local spellName, _, texture = GetSpellInfo(49284)
+	local shieldFrame = CreateFrame('Frame', nil, self)
+	shieldFrame:SetHeight(10)
+	shieldFrame:SetWidth(10)
+	shieldFrame:SetPoint("LEFT", self, "LEFT", -5, 0)
+
+	local shieldIcon = shieldFrame:CreateTexture(nil, "OVERLAY")
+	shieldIcon:SetTexture(texture)
+	shieldIcon:SetAllPoints(shieldFrame)
+	shieldIcon:Hide()
+	shieldFrame:RegisterEvent("UNIT_AURA")
+	shieldFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	shieldFrame:SetScript("OnEvent", function(self)
+		local unit = self:GetParent().unit
+		if unit and UnitAura(self:GetParent().unit, spellName) then
+			shieldIcon:Show()
+		else
+			shieldIcon:Hide()
+		end
+	end)
+end
+
+local function makeMasterlooter(self)
+	local masterlooter = self:CreateTexture(nil, "OVERLAY")
+	masterlooter:SetHeight(16)
+	masterlooter:SetWidth(16)
+	masterlooter:SetPoint("TOPRIGHT", self, "TOPRIGHT", 8, 8)
+	self.MasterLooter = masterlooter
+end
+-- TODO banzai, masterlooter, pet-ttl, lfd-role, raid-targets, readycheck
+-- TODO debuff hightlighting, combo-points, showplayer-heal
+
 local UnitSpecific = {
 	target = function(self)
 		local settings = CopyTable(big)
@@ -632,6 +665,10 @@ local UnitSpecific = {
 		makePortrait(self)
 		makeResting(self)
 		makeLeader(self)
+		makeMasterlooter(self)
+
+		RuneFrame:ClearAllPoints()
+		RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
 		--DoPower(self)
 --		self:RegisterEvent("PLAYER_UPDATE_RESTING", PLAYER_UPDATE_RESTING)
 	end,
@@ -652,6 +689,7 @@ local UnitSpecific = {
 		makePortrait(self)
 		makeLeader(self)
 		makeRange(self)
+		makeMasterlooter(self)
 	end,
 	pet = function(self)
 		local settings = CopyTable(small)
@@ -661,6 +699,8 @@ local UnitSpecific = {
 		Shared(self, raid, unit)
 		makeLeader(self)
 		makeRange(self)
+		makeEarthShieldIcon(self)
+		makeMasterlooter(self)
 	end,
 	maintank = function(self, unit)
 		local settings = CopyTable(small)
@@ -668,6 +708,7 @@ local UnitSpecific = {
 		Shared(self, settings, unit)
 		makeRange(self)
 		self:Tag(self.Health.value, hptags.maintank)
+		makeEarthShieldIcon(self)
 	end,
 }
 
