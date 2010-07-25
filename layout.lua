@@ -668,12 +668,7 @@ oUF:Factory(function(self)
 	self:SetActiveStyle'Classic - Party'
 	local party = self:SpawnHeader(nil, nil, 'party',
 		'showParty', true,
-		'yOffset', -40,
-		'xOffset', -40,
-		'maxColumns', 2,
-		'unitsPerColumn', 2,
-		'columnAnchorPoint', 'LEFT',
-		'columnSpacing', 15
+		'yOffset', -31
 	)
 	party:SetPoint("TOPLEFT", 30, -30)
 
@@ -690,6 +685,18 @@ oUF:Factory(function(self)
 		pts[i] = oUF:Spawn("party"..i.."target")
 		pts[i]:SetPoint("TOP", pts[i-1], "BOTTOM", 0, -50)
 		pts[i]:SetParent(ptcontainer)
+	end
+
+	local petcontainer = CreateFrame('Frame', nil, party, "SecureHandlerStateTemplate")
+	local pets = {}
+	pets[1] = oUF:Spawn("partypet1", "oUF_PartyPet1")
+	pets[1]:SetPoint("TOP", pts[1], "BOTTOM", 0, -5)
+	pets[1]:SetParent(petcontainer)
+	pets[1]:SetAttribute("toggleForVehicle", true)
+	for i =2, 4 do
+		pets[i] = oUF:Spawn("partypet"..i, "oUF_PartyPet"..i)
+		pets[i]:SetPoint("TOP", pts[i], "BOTTOM", 0, -5)
+		pets[i]:SetParent(petcontainer)
 	end
 
 	-- raid frames
@@ -711,4 +718,14 @@ oUF:Factory(function(self)
 			raid[i]:SetPoint("TOPLEFT", raid[i-1], "TOPRIGHT", 20, 0)
 		end
 	end
+
+	local mts = self:SpawnHeader(nil, nil, 'raid',
+		-- "template", "oUF_profalbert_mtt",
+		"showRaid", true,
+		"yOffset", 1,
+		"groupBy", "ROLE",
+		"groupFilter", "MAINTANK",
+		"groupingOrder", "1,2,3,4,5,6,7,8"
+	)
+	mts:SetPoint("TOPLEFT", raid[6], "BOTTOMLEFT", 0, -30)
 end)
