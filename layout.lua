@@ -803,32 +803,32 @@ oUF:Factory(function(self)
 
 	self:SetActiveStyle("Classic - Targettarget")
 	local pts = {}
-	pts[1] = oUF:Spawn("party1target")
+	pts[1] = self:Spawn("party1target")
 	pts[1]:SetParent(ptcontainer)
 	pts[1]:SetPoint("TOPLEFT", ptcontainer, "TOPLEFT")
 	for i =2, 4 do
-		pts[i] = oUF:Spawn("party"..i.."target")
+		pts[i] = self:Spawn("party"..i.."target")
 		pts[i]:SetPoint("TOP", pts[i-1], "BOTTOM", 0, -50)
 		pts[i]:SetParent(ptcontainer)
 	end
 
 	local petcontainer = CreateFrame('Frame', nil, party, "SecureHandlerStateTemplate")
 	local pets = {}
-	pets[1] = oUF:Spawn("partypet1", "oUF_PartyPet1")
+	pets[1] = self:Spawn("partypet1", "oUF_PartyPet1")
 	pets[1]:SetPoint("TOP", pts[1], "BOTTOM", 0, -5)
 	pets[1]:SetParent(petcontainer)
 	pets[1]:SetAttribute("toggleForVehicle", true)
 	for i =2, 4 do
-		pets[i] = oUF:Spawn("partypet"..i, "oUF_PartyPet"..i)
+		pets[i] = self:Spawn("partypet"..i, "oUF_PartyPet"..i)
 		pets[i]:SetPoint("TOP", pts[i], "BOTTOM", 0, -5)
 		pets[i]:SetParent(petcontainer)
 	end
 
 	-- raid frames
-	oUF:SetActiveStyle("Classic - Raid")
+	self:SetActiveStyle("Classic - Raid")
 	local raid = {}
 	for i = 1, 8 do
-		raid[i] = oUF:SpawnHeader("oUF_Raid"..i, nil, 'raid',
+		raid[i] = self:SpawnHeader("oUF_Raid"..i, nil, 'raid',
 			-- "template", "oUF_profalbert_raid",
 			"yOffset", -3,
 			"groupFilter", tostring(i),
@@ -844,7 +844,7 @@ oUF:Factory(function(self)
 		end
 	end
 
-	oUF:SetActiveStyle("Classic - Maintank")
+	self:SetActiveStyle("Classic - Maintank")
 	local mts = self:SpawnHeader(nil, nil, 'raid',
 		"template", "oUF_profalbert_mtt",
 		"showRaid", true,
@@ -854,4 +854,55 @@ oUF:Factory(function(self)
 		"groupingOrder", "1,2,3,4,5,6,7,8"
 	)
 	mts:SetPoint("TOPLEFT", raid[6], "BOTTOMLEFT", 0, -30)
+
+	local bossContainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
+	bossContainer:SetPoint("TOPLEFT", mts, "BOTTOMLEFT", 0, -30)
+	self:SetActiveStyle("Classic - Targettarget")
+	local boss = {}
+	boss[1] = self:Spawn("boss1")
+	boss[1]:SetParent(bossContainer)
+	boss[1]:SetPoint("TOPLEFT", bossContainer, "TOPLEFT")
+	for i = 2,4 do
+		boss[i] = self:Spawn("boss" .. i)
+		boss[i]:SetPoint("TOP", boss[i-1], "BOTTOM", 0, -5)
+		boss[i]:SetParent(bossContainer)
+	end
+
+	-- TODO castbar and targetframe sometimes
+	local arenaContainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
+	arenaContainer:SetPoint("TOPLEFT", UIParent, "LEFT", 10, 0)
+	local arena = {}
+	arena[1] = self:Spawn("arena1")
+	arena[1]:SetParent(arenaContainer)
+	arena[1]:SetPoint("TOPLEFT", arenaContainer, "TOPLEFT")
+	for i = 2,5 do
+		arena[i] = self:Spawn("arena" .. i)
+		arena[i]:SetPoint("TOP", arena[i-1], "BOTTOM", 0, -5)
+		arena[i]:SetParent(arenaContainer)
+	end
+	-- pets should work
+	local arenapets = {}
+	arenapets[1] = self:Spawn("arenapet1")
+	arenapets[1]:SetParent(arenaContainer)
+	arenapets[1]:SetPoint("TOPLEFT", arena[1], "TOPRIGHT", 5, 0)
+	for i = 2,5 do
+		arenapets[i] = self:Spawn("arenapet" .. i)
+		arenapets[i]:SetPoint("TOP", arenapets[i-1], "BOTTOM", 0, -5)
+		arenapets[i]:SetParent(arenaContainer)
+	end
+
+	-- handle the original araneframes
+	-- arenaframes are created when first entering an arena
+	local dummy = function() end
+	arenaContainer:RegisterEvent("PLAYER_ENTERING_WORLD")
+	arenaContainer:SetScript("OnEvent", function(self)
+		for i = 1,5 do
+			local frame = _G["ArenaEnemyFrame" .. i]
+			if not frame then return end
+			self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+			frame:UnregisterAllEvents()
+			frame.Show = dummy
+			frame:Hide()
+		end
+	end)
 end)
