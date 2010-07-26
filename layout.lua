@@ -3,6 +3,7 @@ local oUF = ns.oUF or _G[ assert( GetAddOnMetadata(name, "X-oUF"), "X-oUF metada
 assert( oUF, "Unable to locate oUF." )
 
 local LSM = LibStub("LibSharedMedia-3.0")
+local Banzai = LibStub("LibBanzai-2.0")
 
 local _TEXTURE = LSM:Fetch("statusbar", "Perl v2")
 local defaultfont = LSM:Fetch("font", "Arial Narrow")
@@ -344,6 +345,26 @@ local function makeHealthValue(self, tag, point)
 	self:Tag(HealthPoints, tag)
 
 	self.Health.value = HealthPoints
+end
+
+local function makeBanzai(self)
+	local texture = self.Health:CreateTexture(nil, "OVERLAY")
+	texture:SetTexture("Interface\\Icons\\Spell_Deathknight_BloodPresence")
+	texture:SetHeight(15)
+	texture:SetWidth(15)
+	if self.Portrait2 then
+		texture:SetPoint("CENTER", self.Portrait2, "CENTER")
+	else
+		texture:SetPoint("CENTER", self.Health, "BOTTOMLEFT")
+	end
+	texture:Hide()
+	self.Banzai = function(self, unit, aggro)
+			if aggro == 1 then
+				texture:Show()
+			else
+				texture:Hide()
+			end
+		end
 end
 
 local function makeLeader(self)
@@ -703,6 +724,7 @@ local UnitSpecific = {
 		makeLFDRole(self)
 		makeReadyCheck(self)
 		makeDebuffHighlighting(self)
+		makeBanzai(self)
 
 		RuneFrame:ClearAllPoints()
 		RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
@@ -730,11 +752,13 @@ local UnitSpecific = {
 		makeMasterlooter(self)
 		makeLFDRole(self)
 		makeDebuffHighlighting(self)
+		makeBanzai(self)
 	end,
 	pet = function(self)
 		local settings = CopyTable(small)
 		Shared(self, settings)
 		makeDebuffHighlighting(self)
+		makeBanzai(self)
 	end,
 	raid = function(self, unit)
 		Shared(self, raid, unit)
@@ -744,6 +768,7 @@ local UnitSpecific = {
 		makeMasterlooter(self)
 		makeReadyCheck(self)
 		makeDebuffHighlighting(self)
+		makeBanzai(self)
 	end,
 	maintank = function(self, unit)
 		local settings = CopyTable(small)
@@ -754,6 +779,7 @@ local UnitSpecific = {
 		makeEarthShieldIcon(self)
 		makeReadyCheck(self)
 		makeDebuffHighlighting(self)
+		makeBanzai(self)
 	end,
 }
 
@@ -940,5 +966,23 @@ oUF:Factory(function(self)
 		RegisterStateDriver(ptcontainer, "healer", ("[spec:%d]healer;nohealer"):format(playerHealSpec))
 	else
 		party:SetAttribute("showPlayer", false)
+	end
+end)
+
+-- setup banzai
+local ignoredUnits = {
+	target = true,
+	targettarget = true,
+	targettargettarget = true,
+}
+
+Banzai:RegisterCallback(function(aggro, name, ...)
+	for i = 1, select("#", ...) do
+		local u = select(i, ...)
+		if ignoredUnits[u] then return end
+		local f = oUF.units[u]
+		if f and f.Banzai then
+			f:Banzai(u, aggro)
+		end
 	end
 end)
