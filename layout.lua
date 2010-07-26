@@ -804,9 +804,10 @@ local function setStyle(settings, self, unit)
 	end -- if unit-find
 
 	if settings["range-fade"] then
-		self.SpellRange = true
-		self.inRangeAlpha = 1.0
-		self.outsideRangeAlpha = 0.6
+		self.SpellRange = {
+			insideAlpha = 1.0,
+			outsideAlpha = 0.6,
+		}
 	end
 
 	if unit == "target" then
