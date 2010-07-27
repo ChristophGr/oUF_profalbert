@@ -2,7 +2,7 @@
 ## Author: profalbert
 ## Title: oUF profalbert
 ## Notes: profalbert style oUF layout
-## OptionalDeps: SharedMedia, LibQuickHealth-2.0, oUF_HealComm4, LibBanzai-2.0, oUF_DebuffHighlight, oUF_ReadyCheck, oUF_RuneBar, oUF_SpellRange
+## OptionalDeps: SharedMedia, LibQuickHealth-2.0, oUF_HealComm4, oUF_Banzai, oUF_DebuffHighlight, oUF_ReadyCheck, oUF_RuneBar, oUF_SpellRange
 ## RequiredDeps: oUF
 ## X-oUF: oUF
 ## SavedVarialbes: oUF_profalbert_healer

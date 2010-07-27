@@ -347,24 +347,17 @@ local function makeHealthValue(self, tag, point)
 	self.Health.value = HealthPoints
 end
 
-local function makeBanzai(self)
-	local texture = self.Health:CreateTexture(nil, "OVERLAY")
-	texture:SetTexture("Interface\\Icons\\Spell_Deathknight_BloodPresence")
-	texture:SetHeight(15)
-	texture:SetWidth(15)
-	if self.Portrait2 then
-		texture:SetPoint("CENTER", self.Portrait2, "CENTER")
+local function doBanzai(self, unit, aggro)
+	if aggro == 1 then
+		self:SetBackdropColor(0.8, 0.2, 0.3)
 	else
-		texture:SetPoint("CENTER", self.Health, "BOTTOMLEFT")
+		self:SetBackdropColor(0, 0, 0)
 	end
-	texture:Hide()
-	self.Banzai = function(self, unit, aggro)
-			if aggro == 1 then
-				texture:Show()
-			else
-				texture:Hide()
-			end
-		end
+end
+
+local function makeBanzai(self)
+	self.ignoreBanzai = false
+	self.Banzai = doBanzai
 end
 
 local function makeLeader(self)
@@ -495,6 +488,7 @@ local function Shared(self, settings, unit)
 	local unit = unit or self.unit
 	makeCommon(self, settings)
 	makeRaidIcons(self)
+	self.ignoreBanzai = true
 	local bbheight = settings["bb-height"] or settings["initial-height"] - settings["hp-height"] - settings["pp-height"]
 	
 	local bb = makeBlankBar(self, bbheight)
@@ -966,23 +960,5 @@ oUF:Factory(function(self)
 		RegisterStateDriver(ptcontainer, "healer", ("[spec:%d]healer;nohealer"):format(playerHealSpec))
 	else
 		party:SetAttribute("showPlayer", false)
-	end
-end)
-
--- setup banzai
-local ignoredUnits = {
-	target = true,
-	targettarget = true,
-	targettargettarget = true,
-}
-
-Banzai:RegisterCallback(function(aggro, name, ...)
-	for i = 1, select("#", ...) do
-		local u = select(i, ...)
-		if ignoredUnits[u] then return end
-		local f = oUF.units[u]
-		if f and f.Banzai then
-			f:Banzai(u, aggro)
-		end
 	end
 end)
