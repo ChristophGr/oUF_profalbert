@@ -3,7 +3,6 @@ local oUF = ns.oUF or _G[ assert( GetAddOnMetadata(name, "X-oUF"), "X-oUF metada
 assert( oUF, "Unable to locate oUF." )
 
 local LSM = LibStub("LibSharedMedia-3.0")
-local Banzai = LibStub("LibBanzai-2.0")
 
 local _TEXTURE = LSM:Fetch("statusbar", "Perl v2")
 local defaultfont = LSM:Fetch("font", "Arial Narrow")
@@ -654,6 +653,50 @@ local function makeEarthShieldIcon(self)
 	end)
 end
 
+local makePetTTL
+
+do
+	local function updatePetFrame(self)
+		local time = GetPetTimeRemaining()
+		local ttl = self.ttl
+		if not time then
+			ttl:SetText("")
+			self:Hide()
+		else
+			if time > 1000000 then
+				ttl:SetText("")
+				return
+			elseif time > 20000 then
+				ttl:SetTextColor(0, 1, 0) -- green
+			elseif time > 10000 then
+				ttl:SetTextColor(1, 1, 0) -- yellow
+			else
+				ttl:SetTextColor(1, 0, 0) -- red
+			end
+			ttl:SetText(("%.1f"):format(time/1000))
+		end
+	end
+
+	local function onPetEvent(self)
+		if GetPetTimeRemaining() then
+			self:Show()
+		else
+			self:Hide()
+		end
+	end
+
+	function makePetTTL(self)
+		local ttl = getFontString(self)
+		ttl:SetPoint("BOTTOM", self, "TOP")
+		local petupdateFrame = CreateFrame("Frame")
+		petupdateFrame:Hide()
+		petupdateFrame:SetScript("OnUpdate", updatePetFrame)
+		petupdateFrame:RegisterEvent("UNIT_PET")
+		petupdateFrame:SetScript("OnEvent", onPetEvent)
+		petupdateFrame.ttl = ttl
+	end
+end
+
 local function makeMasterlooter(self)
 	local masterlooter = self:CreateTexture(nil, "OVERLAY")
 	masterlooter:SetHeight(16)
@@ -753,6 +796,7 @@ local UnitSpecific = {
 		Shared(self, settings)
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
+		makePetTTL(self)
 	end,
 	raid = function(self, unit)
 		Shared(self, raid, unit)
