@@ -670,7 +670,7 @@ end
 
 -- lfd-role, raid-targets, readycheck
 local function makeLFDRole(self)
-	local lfdrole = self:CreateTexture(nil, "OVERLAY")
+	local lfdrole = self.Health:CreateTexture(nil, "OVERLAY")
 	lfdrole:SetHeight(16)
 	lfdrole:SetWidth(16)
 	lfdrole:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", -8, -8)
