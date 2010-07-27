@@ -1,13 +1,7 @@
 local oUF = select( 2, ... ).oUF or _G[ assert( GetAddOnMetadata( ..., "X-oUF" ), "X-oUF metadata missing in parent addon." ) ]
 assert( oUF, "Unable to locate oUF." );
 
-local UPDATE_TIME = 3
-
-local function updateAllElements(frame)
-	for _, v in ipairs(frame.__elements) do
-		v(frame, 'UpdateElement', frame.unit)
-	end
-end
+local MAX_DELAY = 10
 
 local eventFrame = CreateFrame('Frame')
 local timerFrame = CreateFrame('Frame')
@@ -20,15 +14,11 @@ local vehicleWatch = {}
 local function updateVehicleFix(self, elapsed)
 	for frame,value in pairs(vehicleWatch) do
 		local newValue = value + elapsed
-		if newValue > UPDATE_TIME then
+		if UnitExists(frame.unit) or newValue > MAX_DELAY then
 			vehicleWatch[frame] = nil
+			frame:UpdateAllElements()
 		else
 			vehicleWatch[frame] = value + elapsed
-		end
-		-- only update every second
-		if math.floor(newValue) ~= math.floor(value) then
-			print("updating ", frame:GetName(), " ", value)
-			updateAllElements(frame)
 		end
 	end
 	if not next(vehicleWatch) then
