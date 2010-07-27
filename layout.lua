@@ -298,6 +298,18 @@ local function makeBlankBar(self, height)
 	return bb
 end
 
+local function makeHealComm(self)
+	self.HealCommBar = CreateFrame('StatusBar', nil, self.Health)
+	self.HealCommBar:SetHeight(0)
+	self.HealCommBar:SetWidth(0)
+	self.HealCommBar:SetStatusBarTexture(self.Health:GetStatusBarTexture():GetTexture())
+	self.HealCommBar:SetStatusBarColor(0, 1, 0, 0.5)
+	self.HealCommBar:SetPoint('LEFT', self.Health, 'LEFT')
+
+	-- optional flag to show overhealing
+	self.allowHealCommOverflow = true
+end
+
 local function makeHealthBar(self, height, anchors) -- above, portrait, right)
 	local Health = CreateFrame("StatusBar", nil, self)
 	Health:SetHeight(height or 20)
@@ -330,6 +342,9 @@ local function makeHealthBar(self, height, anchors) -- above, portrait, right)
 	HealthBackground:SetAlpha(.5)
 	HealthBackground:SetTexture(_TEXTURE)
 	Health.bg = HealthBackground
+
+	makeHealComm(self)
+
 	return Health
 end
 
