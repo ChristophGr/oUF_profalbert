@@ -715,10 +715,10 @@ local function makeLFDRole(self)
 end
 
 local function makeReadyCheck(self)
-	local readycheck = self:CreateTexture(nil, "OVERLAY")
+	local readycheck = self.Health:CreateTexture(nil, "OVERLAY")
 	readycheck:SetHeight(16)
 	readycheck:SetWidth(16)
-	readycheck:SetPoint("TOPLEFT", hp, "RIGHT", -8, 8)
+	readycheck:SetPoint("TOPLEFT", self, "RIGHT", -8, 8)
 	self.ReadyCheck = readycheck
 end
 
