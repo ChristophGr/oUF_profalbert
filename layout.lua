@@ -744,7 +744,23 @@ local function makeDebuffHighlighting(self)
 	self.DebuffHighlightFilter = not unfiltered -- only show debuffs I can cure, if I can cure any
 end
 
--- TODO banzai, pet-ttl, combo-points
+local function makeBuffHelper(unitFrame)
+	local frame = CreateFrame('Frame')
+	frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+	frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+	frame:RegisterEvent("PLAYER_ALIVE")
+	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frame:SetScript("OnEvent", function(self, event)
+		if InCombatLockdown() or event == "PLAYER_REGEN_DISABLED" then
+			unitFrame.Buffs.num = 6
+		else
+			unitFrame.Buffs.num = 40
+		end
+		unitFrame:UpdateAllElements()
+	end)
+end
+
+-- TODO combo-points
 
 local UnitSpecific = {
 	target = function(self)
@@ -754,6 +770,7 @@ local UnitSpecific = {
 		makePortrait(self)
 		local buffs = makeBuffs(self, settings.buffs)
 		buffs:SetPoint("TOP", self, "BOTTOM")
+		makeBuffHelper(self)
 		makeDebuffs(self, settings.debuffs)
 	end,
 	targettarget = function(self)
