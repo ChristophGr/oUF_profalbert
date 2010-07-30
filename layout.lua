@@ -839,6 +839,7 @@ local UnitSpecific = {
 		makeEarthShieldIcon(self)
 		makeMasterlooter(self)
 		makeReadyCheck(self)
+		makeDebuffs(self, raid.debuffs)
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
 		makeHealComm(self)
