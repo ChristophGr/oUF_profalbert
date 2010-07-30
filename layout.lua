@@ -343,8 +343,6 @@ local function makeHealthBar(self, height, anchors) -- above, portrait, right)
 	HealthBackground:SetTexture(_TEXTURE)
 	Health.bg = HealthBackground
 
-	makeHealComm(self)
-
 	return Health
 end
 
@@ -795,6 +793,8 @@ local UnitSpecific = {
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
 
+    makeHealComm(self)
+
 		RuneFrame:ClearAllPoints()
 		RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
 		--DoPower(self)
@@ -822,6 +822,7 @@ local UnitSpecific = {
 		makeLFDRole(self)
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
+		makeHealComm(self)
 	end,
 	pet = function(self)
 		local settings = CopyTable(small)
@@ -829,6 +830,7 @@ local UnitSpecific = {
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
 		makePetTTL(self)
+		makeHealComm(self)
 	end,
 	raid = function(self, unit)
 		Shared(self, raid, unit)
@@ -839,6 +841,7 @@ local UnitSpecific = {
 		makeReadyCheck(self)
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
+		makeHealComm(self)
 	end,
 	maintank = function(self, unit)
 		local settings = CopyTable(small)
@@ -850,6 +853,7 @@ local UnitSpecific = {
 		makeReadyCheck(self)
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
+		makeHealComm(self)
 	end,
 }
 
