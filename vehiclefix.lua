@@ -4,7 +4,6 @@ assert( oUF, "Unable to locate oUF." );
 local MAX_DELAY = 10
 
 local eventFrame = CreateFrame('Frame')
-local timerFrame = CreateFrame('Frame')
 
 eventFrame:RegisterEvent("UNIT_ENTERED_VEHICLE")
 eventFrame:RegisterEvent("UNIT_EXITED_VEHICLE")
@@ -25,7 +24,7 @@ local function updateVehicleFix(self, elapsed)
 		self:Hide()
 	end
 end
-timerFrame:SetScript("OnUpdate", updateVehicleFix)
+eventFrame:SetScript("OnUpdate", updateVehicleFix)
 
 local function handleVehicleEvent(self, event, unit)
 	local frame = oUF.units[unit]
@@ -33,9 +32,8 @@ local function handleVehicleEvent(self, event, unit)
 		return
 	end
 	vehicleWatch[frame] = 0
-	timerFrame:Show()
+	self:Show()
 end
 eventFrame:SetScript("OnEvent", handleVehicleEvent)
 
-timerFrame:Hide()
-eventFrame:Show()
+eventFrame:Hide()
