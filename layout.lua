@@ -1,3 +1,14 @@
+--[[
+* debuff-highlight frame (<-> banzai)
+* review health-tags
+* unit visible (Health tag)
+* pet-update-fix?
+* rescomm
+* mana-color
+* bigger in 10-man
+
+--]]
+
 local name, ns = ...
 local oUF = ns.oUF or _G[ assert( GetAddOnMetadata(name, "X-oUF"), "X-oUF metadata missing in parent addon.")]
 assert( oUF, "Unable to locate oUF." )
