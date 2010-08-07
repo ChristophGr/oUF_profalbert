@@ -1,11 +1,13 @@
 --[[
-* debuff-highlight frame (<-> banzai)
-* review health-tags
+* ignore banzai in solo
+* review health-tags (death)
 * unit visible (Health tag)
 * pet-update-fix?
 * rescomm
-* mana-color
+* mana-color (tiny-bars)
 * bigger in 10-man
+* indicate hostile raidmembers
+* fix group-debuffs
 
 --]]
 
@@ -747,10 +749,20 @@ local function makeReadyCheck(self)
 end
 
 local _, playerClass = UnitClass("player")
-local function makeDebuffHighlighting(self)
-	self.DebuffHighlightBackdrop = true -- oUF_DebuffHighlight Support, using the backdrop
-	local unfiltered = (playerClass == "ROGUE" or playerClass == "WARRIOR")
-	self.DebuffHighlightFilter = not unfiltered -- only show debuffs I can cure, if I can cure any
+local function makeDebuffHighlighting(self, height)
+	local texture = self:CreateTexture(nil, "BACKGROUND")
+	--texture:SetTexture([=[Interface\QuestFrame\UI-QuestTitleHighlight]=])
+	texture:SetTexture(_TEXTURE)
+	local diff = height or 5
+	texture:SetPoint("TOPLEFT", self, "TOPLEFT", -diff, diff)
+	texture:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", diff, -diff)
+
+	--texture:SetBlendMode("ADD")
+	texture:SetVertexColor(1,1,1)
+	texture:SetAlpha(0)
+	self.DebuffHighlight = texture
+	self.DebuffHighlightAlpha = 0.65
+	return texture
 end
 
 local function makeBuffHelper(unitFrame)
@@ -801,7 +813,7 @@ local UnitSpecific = {
 		makeMasterlooter(self)
 		makeLFDRole(self)
 		makeReadyCheck(self)
-		makeDebuffHighlighting(self)
+		local texture = makeDebuffHighlighting(self)
 		makeBanzai(self)
 		makeHealComm(self)
 
@@ -816,7 +828,6 @@ local UnitSpecific = {
 		local buffs = makeBuffs(self, focus.buffs)
 		buffs:SetPoint("TOP", self, "BOTTOM")
 		makeDebuffs(self, focus.debuffs)
-		makeDebuffHighlighting(self)
 	end,
 	focustarget = function(self)
 		local settings = CopyTable(small)
@@ -837,7 +848,7 @@ local UnitSpecific = {
 	pet = function(self)
 		local settings = CopyTable(small)
 		Shared(self, settings)
-		makeDebuffHighlighting(self)
+		makeDebuffHighlighting(self, 3)
 		makeBanzai(self)
 		makePetTTL(self)
 		makeHealComm(self)
@@ -850,7 +861,7 @@ local UnitSpecific = {
 		makeMasterlooter(self)
 		makeReadyCheck(self)
 		makeDebuffs(self, raid.debuffs)
-		makeDebuffHighlighting(self)
+		makeDebuffHighlighting(self, 3)
 		makeBanzai(self)
 		makeHealComm(self)
 	end,
@@ -862,7 +873,7 @@ local UnitSpecific = {
 		self:Tag(self.Health.value, hptags.maintank)
 		makeEarthShieldIcon(self)
 		makeReadyCheck(self)
-		makeDebuffHighlighting(self)
+		makeDebuffHighlighting(self, 3)
 		makeBanzai(self)
 		makeHealComm(self)
 	end,
