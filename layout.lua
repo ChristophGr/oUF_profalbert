@@ -803,11 +803,10 @@ local UnitSpecific = {
 		makeReadyCheck(self)
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
-
-    makeHealComm(self)
+		makeHealComm(self)
 
 		RuneFrame:ClearAllPoints()
-		RuneFrame:SetPoint("BOTTOM", player, "TOP", 0, 5)
+		RuneFrame:SetPoint("BOTTOM", self, "TOP", 0, 5)
 		--DoPower(self)
 --		self:RegisterEvent("PLAYER_UPDATE_RESTING", PLAYER_UPDATE_RESTING)
 	end,
