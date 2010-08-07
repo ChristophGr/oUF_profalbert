@@ -7,7 +7,6 @@
 * mana-color (tiny-bars)
 * bigger in 10-man
 * indicate hostile raidmembers
-* fix group-debuffs
 
 --]]
 
@@ -841,6 +840,7 @@ local UnitSpecific = {
 		makeRange(self)
 		makeMasterlooter(self)
 		makeLFDRole(self)
+		makeDebuffs(self, big.debuffs)
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
 		makeHealComm(self)
