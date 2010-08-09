@@ -373,13 +373,28 @@ end
 
 local function doBanzai(self, unit, aggro)
 	if aggro == 1 then
-		self:SetBackdropColor(0.8, 0.2, 0.3)
+		self.BanzaiFrame:Show()
 	else
-		self:SetBackdropColor(0, 0, 0)
+		self.BanzaiFrame:Hide()
 	end
 end
 
 local function makeBanzai(self)
+	local frame = CreateFrame('Frame', nil, self)
+	local border = LSM:Fetch("border", "Tooltip enlarged")
+	local backdrop = {
+		edgeFile = border,
+		edgeSize = 10
+	}
+	local height = math.ceil(self:GetAttribute("initial-height") / 10)
+	local diff = height or 5
+	frame:SetPoint("TOPLEFT", self, "TOPLEFT", -diff, diff)
+	frame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", diff, -diff)
+	frame:SetBackdrop(backdrop)
+	frame:SetBackdropBorderColor(1, 0, 0)
+	frame:SetFrameLevel(self:GetFrameLevel() - 1)
+	frame:Hide()
+	self.BanzaiFrame = frame
 	self.ignoreBanzai = false
 	self.Banzai = doBanzai
 end
