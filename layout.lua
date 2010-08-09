@@ -1,5 +1,4 @@
 --[[
-* ignore banzai in solo
 * review health-tags (death)
 * unit visible (Health tag)
 * pet-update-fix?
@@ -957,7 +956,7 @@ oUF:Factory(function(self)
 	for i = 1, 8 do
 		raid[i] = self:SpawnHeader("oUF_Raid"..i, nil, 'raid',
 			-- "template", "oUF_profalbert_raid",
-			"yOffset", -3,
+			"yOffset", -5,
 			"groupFilter", tostring(i),
 			"showRaid", true,
 			"point", "TOP"
