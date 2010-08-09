@@ -2,11 +2,11 @@
 * review health-tags (death)
 * unit visible (Health tag)
 * pet-update-fix?
-* rescomm
+* rescomm (drycoded)
 * mana-color (tiny-bars)
 * bigger in 10-man
 * indicate hostile raidmembers
-
+* combo-points
 --]]
 
 local name, ns = ...
@@ -784,7 +784,15 @@ local function makeBuffHelper(unitFrame)
 	end)
 end
 
--- TODO combo-points
+local function makeResComm(self)
+	local sb = CreateFrame("StatusBar", nil, self)
+	sb:SetHeight(10)
+	sb:SetWidth(15)
+	sb:SetPoint("CENTER")
+	sb:SetFrameLevel(self:GetFrameLevel() + 1)
+	sb:SetStatusBarTexture([=[Interface\Icons\Spell_Holy_Resurrection]=])
+	self.ResComm = sb
+end
 
 local UnitSpecific = {
 	target = function(self)
@@ -819,6 +827,7 @@ local UnitSpecific = {
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
 		makeHealComm(self)
+		makeResComm(self)
 
 		RuneFrame:ClearAllPoints()
 		RuneFrame:SetPoint("BOTTOM", self, "TOP", 0, 5)
@@ -849,6 +858,7 @@ local UnitSpecific = {
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
 		makeHealComm(self)
+		makeResComm(self)
 	end,
 	pet = function(self)
 		local settings = CopyTable(small)
@@ -869,6 +879,7 @@ local UnitSpecific = {
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
 		makeHealComm(self)
+		makeResComm(self)
 	end,
 	maintank = function(self, unit)
 		local settings = CopyTable(small)
@@ -881,6 +892,7 @@ local UnitSpecific = {
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
 		makeHealComm(self)
+		makeResComm(self)
 	end,
 }
 
