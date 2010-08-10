@@ -784,13 +784,44 @@ local function makeBuffHelper(unitFrame)
 	end)
 end
 
+local libResComm = LibStub("LibResComm-1.0")
+
 local function makeResComm(self)
-	local sb = CreateFrame("StatusBar", nil, self)
-	sb:SetHeight(10)
-	sb:SetWidth(15)
-	sb:SetPoint("CENTER")
-	sb:SetFrameLevel(self:GetFrameLevel() + 1)
-	sb:SetStatusBarTexture([=[Interface\Icons\Spell_Holy_Resurrection]=])
+	local sb = CreateFrame("StatusBar", nil, self.Health)
+	local h = self:GetAttribute("initial-height")
+	local w = self:GetAttribute("initial-width")
+	local diff = h/8
+	--sb:SetHeight(h/2.5)
+	--sb:SetWidth(h/2.5)
+	sb:SetPoint("TOPLEFT", self.Health, "TOPLEFT", diff, -diff)
+	sb:SetPoint("BOTTOMRIGHT", self.Health, "BOTTOMRIGHT", -diff, diff)
+	sb:SetFrameLevel(self:GetFrameLevel() + 2)
+	sb:SetStatusBarTexture(_TEXTURE)
+	sb:SetStatusBarColor(0.5,0.5,1)
+	local bg = sb:CreateTexture(nil, "BORDER")
+	bg:SetAllPoints(sb)
+	bg:SetTexture(_TEXTURE)
+	local rezzer = getFontString(sb)
+	rezzer:SetAllPoints(sb)
+	local function update()
+		if not self.unit then return end
+		local unitName = UnitName(self.unit)
+		local beingRessed, resserName = libResComm:IsUnitBeingRessed(unitName)
+		local hpv = self.Health.value
+		if beingRessed then
+			if hpv then
+				hpv:Hide()
+			end
+			rezzer:SetText(resserName)
+		else
+			if hpv then
+				hpv:Show()
+			end
+			rezzer:SetText("")
+		end
+	end
+	libResComm.RegisterCallback("oUF_ResComm" .. self:GetName(), "ResComm_ResStart", update)
+	libResComm.RegisterCallback("oUF_ResComm" .. self:GetName(), "ResComm_ResEnd", update)
 	self.ResComm = sb
 end
 
