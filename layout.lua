@@ -52,11 +52,11 @@ local siValueShort = function(val)
 	if(val >= 1e7) then
 		return ("%dm"):format(round(val / 1e6))
 	elseif(val >= 1e6) then
-		return ("%.1fm"):format(round(val / 1e6), 1)
+		return ("%sm"):format(round(val / 1e6), 1)
 	elseif(val >= 1e4) then
 		return ("%dk"):format(round(val / 1e3))
 	elseif(val >= 1e3) then
-		return ("%.1fk"):format(round(val / 1e3, 1))
+		return ("%sk"):format(round(val / 1e3, 1))
 	else
 		return val
 	end
@@ -66,7 +66,7 @@ local siValue = function(val)
 	if(val >= 1e7) then
 		return ("%dm"):format(round(val / 1e6))
 	elseif(val >= 1e6) then
-		return ("%.1fm"):format(round(val / 1e6), 1)
+		return ("%sm"):format(round(val / 1e6), 1)
 	elseif(val >= 1e5) then
 		return ("%dk"):format(round(val / 1e3))
 	else
