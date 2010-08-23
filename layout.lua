@@ -822,6 +822,7 @@ local function makeResComm(self)
 	end
 	libResComm.RegisterCallback("oUF_ResComm" .. self:GetName(), "ResComm_ResStart", update)
 	libResComm.RegisterCallback("oUF_ResComm" .. self:GetName(), "ResComm_ResEnd", update)
+	sb:Hide()
 	self.ResComm = sb
 end
 
