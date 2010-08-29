@@ -903,6 +903,7 @@ local UnitSpecific = {
 	end,
 	raid = function(self, unit)
 		Shared(self, raid, unit)
+		self.Health.colorReaction = true
 		makeLeader(self)
 		makeRange(self)
 		makeEarthShieldIcon(self)
