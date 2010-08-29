@@ -511,6 +511,7 @@ local hptags = {
 	partytarget = "[dead][profalbert:curhp] [profalbert:perhp]",
 	partypet = '[dead][profalbert:Health]',
 	raid = "[dead][offline][profalbert:raidhp]",
+	boss = "[dead][profalbert:HealthWithPer]",
 	maintank = "[dead][offline][profalbert:curhp] [profalbert:missinghp]",
 }
 hptags.vehicle = hptags.pet
