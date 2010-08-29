@@ -7,7 +7,6 @@
 * bigger in 10-man
 * indicate hostile raidmembers
 * combo-points
-* % in boss-frames
 * fix warlock pet vehicle
 --]]
 
@@ -1028,7 +1027,7 @@ oUF:Factory(function(self)
 
 	local bossContainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
 	bossContainer:SetPoint("TOPLEFT", mts, "BOTTOMLEFT", 0, -30)
-	self:SetActiveStyle("Classic - Targettarget")
+	-- self:SetActiveStyle("Classic - Maintank")
 	local boss = {}
 	boss[1] = self:Spawn("boss1")
 	boss[1]:SetParent(bossContainer)
