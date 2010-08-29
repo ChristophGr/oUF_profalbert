@@ -7,6 +7,8 @@
 * bigger in 10-man
 * indicate hostile raidmembers
 * combo-points
+* % in boss-frames
+* fix warlock pet vehicle
 --]]
 
 local name, ns = ...
@@ -258,7 +260,7 @@ end
 local function getFontString(parent, font)
 	local fs = parent:CreateFontString(nil, "OVERLAY")
 	local height = getFontStringHeight(parent)
-	
+
 	fs:SetFont(font or defaultfont, height)
 	fs:SetShadowColor(0,0,0)
 	fs:SetShadowOffset(0.8, -0.8)
@@ -325,7 +327,7 @@ local function makeHealthBar(self, height, anchors) -- above, portrait, right)
 	local Health = CreateFrame("StatusBar", nil, self)
 	Health:SetHeight(height or 20)
 	Health:SetStatusBarTexture(_TEXTURE)
-	
+
 	Health:SetPoint("TOP")
 	--Health:SetPoint("BOTTOM")
 	Health:SetPoint("LEFT")
@@ -433,7 +435,7 @@ local function Portrait(self)
 	else
 		portrait:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT")
 	end
-	
+
 	local fallback = portrait:CreateTexture()
 	fallback:SetAllPoints(portrait)
 	portrait.fallback = fallback
@@ -528,7 +530,7 @@ local function Shared(self, settings, unit)
 	makeRaidIcons(self)
 	self.ignoreBanzai = true
 	local bbheight = settings["bb-height"] or settings["initial-height"] - settings["hp-height"] - settings["pp-height"]
-	
+
 	local bb = makeBlankBar(self, bbheight)
 	if settings["info-tag"] then
 		makeInfoText(self, settings["info-tag"])
@@ -567,11 +569,11 @@ end--]]
 local makeBuffs = function(self, settings)
 	-- Buffs
 	local Buffs = CreateFrame("Frame", nil, self)
-	
+
 	Buffs:SetPoint'LEFT'
 	Buffs:SetPoint'RIGHT'
 	Buffs:SetHeight(16)
-	
+
 	Buffs.size = 16
 	for k,v in pairs(settings) do
 		Buffs[k] = v
@@ -579,7 +581,7 @@ local makeBuffs = function(self, settings)
 
 	self.Buffs = Buffs
 	return Buffs
-	
+
 end
 
 local function makeDebuffs(self, settings)
@@ -848,7 +850,7 @@ local UnitSpecific = {
 		Shared(self, settings)
 		--[[self.Health.value:ClearAllPoints()
 		self.Health.value:SetPoint("RIGHT")--]]
-		
+
 		makePortrait(self)
 		makeResting(self)
 		makeLeader(self)
