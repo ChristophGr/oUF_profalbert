@@ -502,13 +502,13 @@ end
 
 local hptags = {
 	player = '[dead][profalbert:Health]',
-	pet = "[profalbert:hpshort]",
+	pet = "[dead][profalbert:hpshort]",
 	target = '[dead][offline][profalbert:HealthWithPer]',
-	targettarget = "[profalbert:curhp] [profalbert:perhp]",
+	targettarget = "[dead][profalbert:curhp] [profalbert:perhp]",
 	focus = '[dead][offline][profalbert:hpshort]',
-	focustarget = "[profalbert:curhp] [profalbert:perhp]",
+	focustarget = "[dead][profalbert:curhp] [profalbert:perhp]",
 	party = '[dead][offline][profalbert:Health] [profalbert:missinghp]',
-	partytarget = "[profalbert:curhp] [profalbert:perhp]",
+	partytarget = "[dead][profalbert:curhp] [profalbert:perhp]",
 	partypet = '[dead][profalbert:Health]',
 	raid = "[dead][offline][profalbert:raidhp]",
 	maintank = "[dead][offline][profalbert:curhp] [profalbert:missinghp]",
