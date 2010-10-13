@@ -671,7 +671,7 @@ local raid = {
 }
 
 local function makeEarthShieldIcon(self)
-	local spellName, _, texture = GetSpellInfo(49284)
+	local spellName, _, texture = GetSpellInfo(974)
 	local shieldFrame = CreateFrame('Frame', nil, self)
 	shieldFrame:SetHeight(10)
 	shieldFrame:SetWidth(10)
