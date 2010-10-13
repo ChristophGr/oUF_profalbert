@@ -1,13 +1,12 @@
 --[[
 * review health-tags (death)
-* unit visible (Health tag)
 * pet-update-fix?
-* rescomm (drycoded)
 * mana-color (tiny-bars)
 * bigger in 10-man
 * indicate hostile raidmembers
 * combo-points
 * fix warlock pet vehicle
+* boss-hp-tags
 --]]
 
 local name, ns = ...
