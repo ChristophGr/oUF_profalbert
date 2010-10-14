@@ -287,9 +287,7 @@ local function makeCommon(self, settings)
 	self:SetBackdrop(backdrop)
 	self:SetBackdropColor(0, 0, 0, 1)
 	self:SetBackdropBorderColor(.3, .3, .3, 1)
-
-	self:SetAttribute("initial-width", settings["initial-width"] or 240)
-	self:SetAttribute("initial-height", settings["initial-height"] or 60)
+	self:SetSize(settings["initial-width"] or 240, settings["initial-height"] or 60)
 end
 
 local function makeRaidIcons(self)
@@ -385,7 +383,7 @@ local function makeBanzai(self)
 		edgeFile = border,
 		edgeSize = 10
 	}
-	local height = math.ceil(self:GetAttribute("initial-height") / 10)
+	local height = math.ceil(self:GetHeight() / 10)
 	local diff = height or 5
 	frame:SetPoint("TOPLEFT", self, "TOPLEFT", -diff, diff)
 	frame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", diff, -diff)
@@ -523,7 +521,7 @@ do
 	setmetatable(hptags, { __index = getTag, } )
 end
 
-local function Shared(self, settings, unit)
+local function Shared(self, settings, unit, isSingle)
 	local unit = unit or self.unit
 	makeCommon(self, settings)
 	makeRaidIcons(self)
@@ -789,8 +787,8 @@ local libResComm = LibStub("LibResComm-1.0")
 
 local function makeResComm(self)
 	local sb = CreateFrame("StatusBar", nil, self.Health)
-	local h = self:GetAttribute("initial-height")
-	local w = self:GetAttribute("initial-width")
+	local h = self:GetHeight()
+	local w = self:GetWidth()
 	local diff = h/8
 	--sb:SetHeight(h/2.5)
 	--sb:SetWidth(h/2.5)
@@ -828,26 +826,26 @@ local function makeResComm(self)
 end
 
 local UnitSpecific = {
-	target = function(self)
+	target = function(self, ...)
 		local settings = CopyTable(big)
 		settings["hp-point"] = { "RIGHT" },
-		Shared(self, settings)
+		Shared(self, settings, ...)
 		makePortrait(self)
 		local buffs = makeBuffs(self, settings.buffs)
 		buffs:SetPoint("TOP", self, "BOTTOM")
 		makeBuffHelper(self)
 		makeDebuffs(self, settings.debuffs)
 	end,
-	targettarget = function(self)
+	targettarget = function(self, ...)
 		local settings = CopyTable(small)
 		settings["hp-point"] = { "RIGHT", }
-		Shared(self, settings)
+		Shared(self, settings, ...)
 		--DoAuras(self)
 	end,
-	player = function(self)
+	player = function(self, ...)
 		local settings = CopyTable(big)
 		settings["hp-point"] = nil
-		Shared(self, settings)
+		Shared(self, settings, ...)
 		--[[self.Health.value:ClearAllPoints()
 		self.Health.value:SetPoint("RIGHT")--]]
 
@@ -867,21 +865,21 @@ local UnitSpecific = {
 		--DoPower(self)
 --		self:RegisterEvent("PLAYER_UPDATE_RESTING", PLAYER_UPDATE_RESTING)
 	end,
-	focus = function(self)
-		Shared(self, focus)
+	focus = function(self, ...)
+		Shared(self, focus, ...)
 		makeRange(self)
 		local buffs = makeBuffs(self, focus.buffs)
 		buffs:SetPoint("TOP", self, "BOTTOM")
 		makeDebuffs(self, focus.debuffs)
 		makeDebuffHighlighting(self)
 	end,
-	focustarget = function(self)
+	focustarget = function(self, ...)
 		local settings = CopyTable(small)
 		settings["hp-point"] = { "RIGHT", }
-		Shared(self, settings)
+		Shared(self, settings, ...)
 	end,
-	party = function(self, unit)
-		Shared(self, big, unit)
+	party = function(self, ...)
+		Shared(self, big, ...)
 		makePortrait(self)
 		makeLeader(self)
 		makeRange(self)
@@ -893,16 +891,16 @@ local UnitSpecific = {
 		makeHealComm(self)
 		makeResComm(self)
 	end,
-	pet = function(self)
+	pet = function(self, ...)
 		local settings = CopyTable(small)
-		Shared(self, settings)
+		Shared(self, settings, ...)
 		makeDebuffHighlighting(self)
 		makeBanzai(self)
 		makePetTTL(self)
 		makeHealComm(self)
 	end,
-	raid = function(self, unit)
-		Shared(self, raid, unit)
+	raid = function(self, ...)
+		Shared(self, raid, ...)
 		self.Health.colorReaction = true
 		makeLeader(self)
 		makeRange(self)
@@ -915,10 +913,10 @@ local UnitSpecific = {
 		makeHealComm(self)
 		makeResComm(self)
 	end,
-	maintank = function(self, unit)
+	maintank = function(self, ...)
 		local settings = CopyTable(small)
 		settings["hp-point"] = { "RIGHT", }
-		Shared(self, settings, unit)
+		Shared(self, settings, ...)
 		makeRange(self)
 		self:Tag(self.Health.value, hptags.maintank)
 		makeEarthShieldIcon(self)
@@ -930,8 +928,8 @@ local UnitSpecific = {
 	end,
 }
 
-oUF:RegisterStyle("Classic", function(self, unit)
-	Shared(self, small)
+oUF:RegisterStyle("Classic", function(self, ...)
+	Shared(self, small, ...)
 end)
 for unit,layout in next, UnitSpecific do
 	-- Capitalize the unit name, so it looks better.
