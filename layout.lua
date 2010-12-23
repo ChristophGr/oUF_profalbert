@@ -199,7 +199,7 @@ oUF.Tags["profalbert:name"] = function(unit, originalUnit)
 		return UnitName(unit)
 	end
 end
-oUF.TagEvents["profalbert:name"] = "UNIT_NAME_UPDATE UNIT_ENTERING_VEHICLE UNIT_ENTERED_VEHICLE UNIT_EXITING_VEHICLE UNIT_EXITED_VEHICLE"
+oUF.TagEvents["profalbert:name"] = "UNIT_NAME_UPDATE UNIT_ENTERING_VEHICLE UNIT_ENTERED_VEHICLE UNIT_EXITING_VEHICLE UNIT_EXITED_VEHICLE PARTY_MEMBERS_CHANGED"
 
 local PreUpdateHealth = function(health, unit)
 	health.colorReaction = not UnitIsPlayer(unit)
