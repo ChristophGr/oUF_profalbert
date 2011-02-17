@@ -86,7 +86,7 @@ local function healthOrAFK(unit, orig)
 		if min == max then
 			return AFK
 		else
-			return ("|cff000000%d/%d|r"):format(siValue(min), siValue(max))
+			return ("|cff000000%s/%s|r"):format(siValue(min), siValue(max))
 		end
 	else
 		return ("%s/%s"):format(siValue(min), siValue(max))
@@ -159,7 +159,7 @@ end)
 oUF.Tags['profalbert:power'] = function(unit)
 	local min, max = UnitPower(unit), UnitPowerMax(unit)
 	--if(min == 0 or max == 0 or not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
-	return ("%d/%d"):format(min, max)
+	return ("%s/%s"):format(min, max)
 	--return siValue(min) .. '/' .. siValue(max)
 end
 oUF.TagEvents['profalbert:power'] = oUF.TagEvents.missingpp
