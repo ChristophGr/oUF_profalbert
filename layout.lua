@@ -202,7 +202,7 @@ end
 oUF.TagEvents["profalbert:name"] = "UNIT_NAME_UPDATE UNIT_ENTERING_VEHICLE UNIT_ENTERED_VEHICLE UNIT_EXITING_VEHICLE UNIT_EXITED_VEHICLE PARTY_MEMBERS_CHANGED"
 
 local PreUpdateHealth = function(health, unit)
-	health.colorReaction = not UnitIsPlayer(unit)
+	health.colorReaction = not UnitIsPlayer(unit) and not UnitIsUnit(unit, "pet") and not UnitIsUnit(unit, "vehicle")
 end
 
 local PostUpdateHealth = function(health, unit, min, max)
