@@ -928,11 +928,26 @@ local UnitSpecific = {
 	end,
 }
 
+--[[
+registering style:  Classic - Player
+registering style:  Classic - Pet
+registering style:  Classic - Target
+registering style:  Classic - Targettarget
+registering style:  Classic - Focus
+registering style:  Classic - Focustarget
+
+registering style:  Classic - Raid
+registering style:  Classic - Party
+
+registering style:  Classic - Maintank
+--]]
+
 oUF:RegisterStyle("Classic", function(self, ...)
 	Shared(self, small, ...)
 end)
 for unit,layout in next, UnitSpecific do
 	-- Capitalize the unit name, so it looks better.
+	print("registering style: ", 'Classic - ' .. unit:gsub("^%l", string.upper))
 	oUF:RegisterStyle('Classic - ' .. unit:gsub("^%l", string.upper), layout)
 end
 
@@ -963,7 +978,11 @@ oUF:Factory(function(self)
 	self:SetActiveStyle'Classic - Party'
 	local party = self:SpawnHeader(nil, nil, 'party',
 		'showParty', true,
-		'yOffset', -31
+		'yOffset', -31,
+		'oUF-initialConfigFunction', ([[
+				self:SetWidth(%d);
+				self:SetHeight(%d)
+			]]):format(big["initial-width"], big["initial-height"])
 	)
 	party:SetPoint("TOPLEFT", 30, -30)
 
@@ -996,6 +1015,7 @@ oUF:Factory(function(self)
 
 	-- raid frames
 	self:SetActiveStyle("Classic - Raid")
+	local raidsettings = raid
 	local raid = {}
 	for i = 1, 8 do
 		raid[i] = self:SpawnHeader("oUF_Raid"..i, nil, 'raid',
@@ -1003,7 +1023,11 @@ oUF:Factory(function(self)
 			"yOffset", -5,
 			"groupFilter", tostring(i),
 			"showRaid", true,
-			"point", "TOP"
+			"point", "TOP",
+			'oUF-initialConfigFunction', ([[
+				self:SetWidth(%d);
+				self:SetHeight(%d)
+			]]):format(raidsettings["initial-width"], raidsettings["initial-height"])
 		)
 		if i == 1 then
 			raid[i]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 20, -75)
@@ -1021,13 +1045,16 @@ oUF:Factory(function(self)
 		"yOffset", 1,
 		"groupBy", "ROLE",
 		"groupFilter", "MAINTANK",
-		"groupingOrder", "1,2,3,4,5,6,7,8"
+		"groupingOrder", "1,2,3,4,5,6,7,8",
+		'oUF-initialConfigFunction', ([[
+				self:SetWidth(%d);
+				self:SetHeight(%d)
+			]]):format(small["initial-width"], small["initial-height"])
 	)
 	mts:SetPoint("TOPLEFT", raid[6], "BOTTOMLEFT", 0, -30)
 
 	local bossContainer = CreateFrame('Frame', nil, UIParent, "SecureHandlerStateTemplate")
 	bossContainer:SetPoint("TOPLEFT", mts, "BOTTOMLEFT", 0, -30)
-	-- self:SetActiveStyle("Classic - Maintank")
 	local boss = {}
 	boss[1] = self:Spawn("boss1")
 	boss[1]:SetParent(bossContainer)
