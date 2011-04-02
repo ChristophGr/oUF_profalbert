@@ -824,9 +824,8 @@ local function makeResComm(self)
 	sb:Hide()
 	self.ResComm = sb
 end
-
+local class = select(2, UnitClass('player'))
 local function makeClassSpecific(self)
-	local class = select(2, UnitClass('player'))
 	if class == "WARLOCK" then
 		-- Warlock Soul Shards
 		local shards = {}
@@ -852,14 +851,18 @@ local function makeClassSpecific(self)
 		shardShadows[1]:SetPoint("RIGHT", shards[2], 'LEFT', -10)
 		shardShadows[3]:SetPoint("LEFT", shards[2], 'RIGHT', 10)
 		self.SoulShards = shards
-	elseif class=="DRUID" or class=="ROGUE" then
+	end
+end
+
+local function makeComboPoints(self)
+	if class=="DRUID" or class=="ROGUE" then
 		-- Druid/rogue combo points
 		local cpoints = {}
 		for i = 1, MAX_COMBO_POINTS do
 			cpoints[i] = self.Power:CreateTexture(nil, 'OVERLAY')
-			cpoints[i]:SetSize(8,9)
+			cpoints[i]:SetSize(15,19)
 		end
-		cpoints[3]:SetPoint("CENTER", 0, -1)
+		cpoints[3]:SetPoint("TOP", self, "BOTTOM", 0, -1)
 		cpoints[2]:SetPoint("RIGHT", cpoints[3], 'LEFT', -10)
 		cpoints[1]:SetPoint("RIGHT", cpoints[2], 'LEFT', -10)
 		cpoints[4]:SetPoint("LEFT", cpoints[3], 'RIGHT', 10)
@@ -878,6 +881,7 @@ local UnitSpecific = {
 		buffs:SetPoint("TOP", self, "BOTTOM")
 		makeBuffHelper(self)
 		makeDebuffs(self, settings.debuffs)
+		makeComboPoints(self)
 	end,
 	targettarget = function(self, ...)
 		local settings = CopyTable(small)
@@ -903,6 +907,7 @@ local UnitSpecific = {
 		makeHealComm(self)
 		makeResComm(self)
 		makeClassSpecific(self)
+		makeComboPoints(self)
 
 		RuneFrame:ClearAllPoints()
 		RuneFrame:SetPoint("BOTTOM", self, "TOP", 0, 5)
