@@ -967,7 +967,7 @@ local UnitSpecific = {
 		settings["hp-point"] = { "RIGHT", }
 		Shared(self, settings, ...)
 		makeRange(self)
-		self:Tag(self.Health.value, hptags.maintank)
+		--self:Tag(self.Health.value, hptags.maintank)
 		makeEarthShieldIcon(self)
 		makeReadyCheck(self)
 		makeDebuffHighlighting(self)
