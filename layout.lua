@@ -75,8 +75,8 @@ local siValue = function(val)
 end
 
 local function makeHealthTag(name, func)
-	oUF.Tags[name] = func
-	oUF.TagEvents[name] = oUF.TagEvents.missinghp
+	oUF.Tags.Methods[name] = func
+	oUF.Tags.Events[name] = oUF.Tags.Events.missinghp
 end
 
 local function healthOrAFK(unit, orig)
@@ -156,15 +156,15 @@ makeHealthTag("profalbert:raidhp", function(unit, origUnit)
 	end
 end)
 
-oUF.Tags['profalbert:power'] = function(unit)
+oUF.Tags.Methods['profalbert:power'] = function(unit)
 	local min, max = UnitPower(unit), UnitPowerMax(unit)
 	--if(min == 0 or max == 0 or not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	return ("%s/%s"):format(min, max)
 	--return siValue(min) .. '/' .. siValue(max)
 end
-oUF.TagEvents['profalbert:power'] = oUF.TagEvents.missingpp
+oUF.Tags.Events['profalbert:power'] = oUF.Tags.Events.missingpp
 
-oUF.Tags['profalbert:difficulty'] = function(u)
+oUF.Tags.Methods['profalbert:difficulty'] = function(u)
 	local l = UnitLevel(u)
 	return Hex(GetQuestDifficultyColor((l > 0) and l or 99))
 end
@@ -187,9 +187,9 @@ local function raidcolor(unit)
 	return hex(color)
 end
 
-oUF.Tags["profalbert:raidcolor"] = raidcolor
+oUF.Tags.Methods["profalbert:raidcolor"] = raidcolor
 
-oUF.Tags["profalbert:name"] = function(unit, originalUnit)
+oUF.Tags.Methods["profalbert:name"] = function(unit, originalUnit)
 	if not originalUnit then
 		return UnitName(unit)
 	end
@@ -199,7 +199,7 @@ oUF.Tags["profalbert:name"] = function(unit, originalUnit)
 		return UnitName(unit)
 	end
 end
-oUF.TagEvents["profalbert:name"] = "UNIT_NAME_UPDATE UNIT_ENTERING_VEHICLE UNIT_ENTERED_VEHICLE UNIT_EXITING_VEHICLE UNIT_EXITED_VEHICLE PARTY_MEMBERS_CHANGED"
+oUF.Tags.Events["profalbert:name"] = "UNIT_NAME_UPDATE UNIT_ENTERING_VEHICLE UNIT_ENTERED_VEHICLE UNIT_EXITING_VEHICLE UNIT_EXITED_VEHICLE PARTY_MEMBERS_CHANGED"
 
 local PreUpdateHealth = function(health, unit)
 	health.colorReaction = not UnitIsPlayer(unit) and not UnitIsUnit(unit, "pet") and not UnitIsUnit(unit, "vehicle")
