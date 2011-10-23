@@ -390,10 +390,12 @@ local function makeBanzai(self)
 	frame:SetBackdrop(backdrop)
 	frame:SetBackdropBorderColor(1, 0, 0)
 	frame:SetFrameLevel(self:GetFrameLevel() - 1)
-	frame:Hide()
-	self.BanzaiFrame = frame
-	self.ignoreBanzai = false
-	self.Banzai = doBanzai
+    frame.SetVertexColor = frame.SetBackdropBorderColor
+	--frame:Hide()
+    self.Threat = frame
+	--self.BanzaiFrame = frame
+	--self.ignoreBanzai = false
+	--self.Banzai = doBanzai
 end
 
 local function makeLeader(self)
