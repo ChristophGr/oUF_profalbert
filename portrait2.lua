@@ -2,11 +2,7 @@ local oUF = _G.oUF
 assert(oUF, "oUF not found")
 
 local Update = function(self, event, unit)
-	if not self.unit then
-		print("self.unit was nil on ", self:GetName())
-		print("event was ", event)
-	end
-	if(not UnitIsUnit(self.unit, unit)) then return end
+	if(not unit or not UnitIsUnit(self.unit, unit)) then return end
 
 	local portrait = self.Portrait2
 	if(portrait:IsObjectType'Model') then
