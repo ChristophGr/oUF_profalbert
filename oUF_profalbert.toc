@@ -1,8 +1,8 @@
-## Interface: 40000
+## Interface: 40200
 ## Author: profalbert
 ## Title: oUF profalbert
 ## Notes: profalbert style oUF layout
-## OptionalDeps: SharedMedia, oUF_Banzai, oUF_DebuffHighlight, oUF_RuneBar, oUF_SpellRange
+## OptionalDeps: SharedMedia, oUF_DebuffHighlight, oUF_RuneBar, oUF_SpellRange
 ## RequiredDeps: oUF
 ## X-oUF: oUF
 ## SavedVarialbes: oUF_profalbert_healer
