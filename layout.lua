@@ -963,6 +963,7 @@ local UnitSpecific = {
 		makeBanzai(self)
 		makeHealComm(self)
 		makeResComm(self)
+        makeLFDRole(self)
 	end,
 	maintank = function(self, ...)
 		local settings = CopyTable(small)
