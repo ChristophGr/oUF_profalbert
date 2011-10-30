@@ -586,9 +586,8 @@ end
 local function makeDebuffs(self, settings)
 	-- Debuffs
 	local Debuffs = CreateFrame("Frame", nil, self)
-	Debuffs:SetPoint'LEFT'
-	Debuffs:SetPoint'RIGHT'
-	Debuffs:SetHeight(20)
+	--Debuffs:SetPoint'LEFT'
+	--Debuffs:SetPoint'RIGHT'
 
 	Debuffs:SetPoint("TOPLEFT", self, "TOPRIGHT",1.5,0)
 	Debuffs.initialAnchor = "TOPLEFT"
@@ -598,7 +597,6 @@ local function makeDebuffs(self, settings)
 	Debuffs:SetHeight(settings.size * settings.y)
 	Debuffs:SetWidth(settings.size * settings.x)
 
-	Debuffs.initialAnchor = "TOPLEFT"
 	Debuffs.size = settings.size
 	Debuffs.showDebuffType = true
 	Debuffs.num = settings.x * settings.y
