@@ -7,7 +7,7 @@
 ## X-oUF: oUF
 ## SavedVarialbes: oUF_profalbert_healer
 
+warlockSpecBars.lua
 portrait2.lua
 layout.xml
 layout.lua
-vehiclefix.lua

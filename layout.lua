@@ -775,6 +775,9 @@ local function makeBuffHelper(unitFrame)
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	frame:SetScript("OnEvent", function(self, event)
 		if InCombatLockdown() or event == "PLAYER_REGEN_DISABLED" then
+			for i = 7, #unitFrame.Buffs do
+				unitFrame.Buffs[i]:Hide()
+			end
 			unitFrame.Buffs.num = 6
 		else
 			unitFrame.Buffs.num = 40
@@ -824,33 +827,40 @@ local function makeResComm(self)
 	sb:Hide()
 	self.ResComm = sb
 end
+local function makeBackground(self)
+	local wbBackground = self:CreateTexture(nil, "BORDER")
+	wbBackground:SetAllPoints(self)
+	wbBackground:SetAlpha(.5)
+	wbBackground:SetTexture(_TEXTURE)
+	self.bg = wbBackground
+end
 local class = select(2, UnitClass('player'))
 local function makeClassSpecific(self)
 	if class == "WARLOCK" then
-		-- Warlock Soul Shards
-		local shards = {}
-		local shardShadows = {}
-		for i = 1, SHARD_BAR_NUM_SHARDS do
-			shards[i] = self.Power:CreateTexture(nil, 'OVERLAY')
-			shardShadows[i] = self.Power:CreateTexture(nil, 'BORDER')
-			shards[i]:SetTexture("Interface\\PlayerFrame\\UI-WarlockShard")
-			shardShadows[i]:SetTexture("Interface\\PlayerFrame\\UI-WarlockShard")
-			shards[i]:SetTexCoord(0.01562500, 0.28125000, 0.00781250, 0.13281250)
-			shardShadows[i]:SetTexCoord(0.01562500, 0.28125000, 0.00781250, 0.13281250)
-			shards[i]:SetSize(18,18)
-			shardShadows[i]:SetSize(18,18)
-			shardShadows[i]:SetAlpha(0.5)
-			shardShadows[i]:SetVertexColor(0.5,0.3,0.3)
+		-- Warlock Spec Bars
+		if select(2, UnitClass("player")) == "WARLOCK" then
+			local wb = CreateFrame("Frame", "TukuiWarlockSpecBars", self)
+			wb:SetHeight(8)
+			wb:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 4)
+			wb:SetWidth(self:GetWidth())
+			wb:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT", 0, 4)
+
+			wb[1] = CreateFrame("StatusBar", "TukuiWarlockSpecBars1", wb)
+			wb[1]:SetStatusBarTexture(_TEXTURE)
+			makeBackground(wb[1])
+			wb[1]:SetPoint("LEFT", wb, "LEFT", 0, 0)
+			wb[1]:SetPoint("BOTTOMLEFT", wb, "BOTTOMLEFT")
+			wb[1]:SetPoint("TOPLEFT", wb, "TOPLEFT")
+			wb[1]:SetWidth(self:GetWidth() / 4)
+			for i = 2, 4 do
+				wb[i] = CreateFrame("StatusBar", "TukuiWarlockSpecBars"..i, wb)
+				wb[i]:SetStatusBarTexture(_TEXTURE)
+				wb[i]:SetPoint("TOPLEFT", wb[i-1], "TOPRIGHT", 1, 0)
+				wb[i]:SetPoint("BOTTOMLEFT", wb[i-1], "BOTTOMRIGHT", 1, 0)
+				makeBackground(wb[i])
+			end
+			self.WarlockSpecBars = wb
 		end
-		shards[2]:SetPoint("CENTER", self, "CENTER")
-		shards[2]:SetPoint("BOTTOM", self, "TOP", 0, 8)
-		shards[1]:SetPoint("RIGHT", shards[2], 'LEFT', -10)
-		shards[3]:SetPoint("LEFT", shards[2], 'RIGHT', 10)
-		shardShadows[2]:SetPoint("CENTER", self, "CENTER")
-		shardShadows[2]:SetPoint("BOTTOM", self, "TOP", 0, 8)
-		shardShadows[1]:SetPoint("RIGHT", shards[2], 'LEFT', -10)
-		shardShadows[3]:SetPoint("LEFT", shards[2], 'RIGHT', 10)
-		self.SoulShards = shards
 	end
 end
 
