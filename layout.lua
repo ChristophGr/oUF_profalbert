@@ -767,25 +767,6 @@ local function makeDebuffHighlighting(self)
 	self.DebuffHighlightFilter = not unfiltered -- only show debuffs I can cure, if I can cure any
 end
 
-local function makeBuffHelper(unitFrame)
-	local frame = CreateFrame('Frame')
-	frame:RegisterEvent("PLAYER_REGEN_ENABLED")
-	frame:RegisterEvent("PLAYER_REGEN_DISABLED")
-	frame:RegisterEvent("PLAYER_ALIVE")
-	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-	frame:SetScript("OnEvent", function(self, event)
-		if InCombatLockdown() or event == "PLAYER_REGEN_DISABLED" then
-			for i = 7, #unitFrame.Buffs do
-				unitFrame.Buffs[i]:Hide()
-			end
-			unitFrame.Buffs.num = 6
-		else
-			unitFrame.Buffs.num = 40
-		end
-		unitFrame:UpdateAllElements()
-	end)
-end
-
 local libResComm = LibStub("LibResComm-1.0")
 
 local function makeResComm(self)
@@ -889,7 +870,6 @@ local UnitSpecific = {
 		makePortrait(self)
 		local buffs = makeBuffs(self, settings.buffs)
 		buffs:SetPoint("TOP", self, "BOTTOM")
-		makeBuffHelper(self)
 		makeDebuffs(self, settings.debuffs)
 		makeComboPoints(self)
 	end,
