@@ -79,6 +79,17 @@ local function makeHealthTag(name, func)
 	oUF.Tags.Events[name] = oUF.Tags.Events.missinghp
 end
 
+oUF.Tags.Methods["profalbert:dead"] = function(u)
+	if UnitHasIncomingResurrection(u) then
+		return 'Rezzing'
+	elseif(UnitIsDead(u)) then
+		return 'Dead'
+	elseif(UnitIsGhost(u)) then
+		return 'Ghost'
+	end
+end
+oUF.Tags.Events["profalbert:dead"] = "UNIT_HEALTH INCOMING_RESURRECT_CHANGED"
+
 local function healthOrAFK(unit, orig)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	local min, max = UnitHealth(unit), UnitHealthMax(unit)
@@ -500,18 +511,18 @@ local function makeInfoText(self, tag)
 end
 
 local hptags = {
-	player = '[dead][profalbert:Health]',
-	pet = "[dead][profalbert:hpshort]",
-	target = '[dead][offline][profalbert:HealthWithPer]',
-	targettarget = "[dead][profalbert:curhp] [profalbert:perhp]",
-	focus = '[dead][offline][profalbert:hpshort]',
-	focustarget = "[dead][profalbert:curhp] [profalbert:perhp]",
-	party = '[dead][offline][profalbert:Health] [profalbert:missinghp]',
+	player = '[profalbert:dead][profalbert:Health]',
+	pet = "[profalbert:dead][profalbert:hpshort]",
+	target = '[profalbert:dead][offline][profalbert:HealthWithPer]',
+	targettarget = "[profalbert:dead][profalbert:curhp] [profalbert:perhp]",
+	focus = '[profalbert:dead][offline][profalbert:hpshort]',
+	focustarget = "[profalbert:dead][profalbert:curhp] [profalbert:perhp]",
+	party = '[profalbert:dead][offline][profalbert:Health] [profalbert:missinghp]',
 	partytarget = "[dead][profalbert:curhp] [profalbert:perhp]",
-	partypet = '[dead][profalbert:Health]',
-	raid = "[dead][offline][profalbert:raidhp]",
-	boss = "[dead][profalbert:HealthWithPer]",
-	maintank = "[dead][offline][profalbert:curhp] [profalbert:missinghp]",
+	partypet = '[profalbert:dead][profalbert:Health]',
+	raid = "[profalbert:dead][offline][profalbert:raidhp]",
+	boss = "[profalbert:dead][profalbert:HealthWithPer]",
+	maintank = "[profalbert:dead][offline][profalbert:curhp] [profalbert:missinghp]",
 }
 hptags.vehicle = hptags.pet
 
