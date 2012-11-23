@@ -791,9 +791,30 @@ local function makeResComm(self)
 	frame:SetHeight(size)
 	frame:SetPoint("CENTER", self.Health, "CENTER")
 	frame:SetFrameLevel(self:GetFrameLevel() + 1)
--- 	icon:SetPoint("BOTTOMRIGHT", self.Health, "BOTTOMRIGHT", -diff, diff)
 	frame:Hide()
 	self.ResurrectIcon = frame
+end
+local function makePhaseIcon(self)
+	local frame = CreateFrame('Frame', self.Health)
+	local icon = frame:CreateTexture(nil, "OVERLAY")
+	icon:SetTexture[[Interface\TargetingFrame\UI-PhasingIcon]]
+	icon:SetAllPoints(frame)
+	local size = min(self:GetHeight(), self:GetWidth()) / 2
+	frame:SetWidth(size)
+	frame:SetHeight(size)
+	frame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", 5, -5)
+	frame:SetFrameLevel(self:GetFrameLevel() + 1)
+	frame:Hide()
+	self.PhaseIcon = frame
+	-- forcing updates as UNIT_PHASE is not always fired correctly
+	local helperFrame = CreateFrame('Frame')
+	helperFrame:SetScript("OnUpdate", function()
+		if not UnitExists(self.unit) or not self:IsShown() then
+			frame:Hide()
+			return
+		end
+		frame:ForceUpdate()
+	end)
 end
 local function makeBackground(self)
 	local wbBackground = self:CreateTexture(nil, "BORDER")
@@ -858,12 +879,14 @@ local UnitSpecific = {
 		buffs:SetPoint("TOP", self, "BOTTOM")
 		makeDebuffs(self, settings.debuffs)
 		makeComboPoints(self)
+		makePhaseIcon(self)
 	end,
 	targettarget = function(self, ...)
 		local settings = CopyTable(small)
 		settings["hp-point"] = { "RIGHT", }
 		Shared(self, settings, ...)
 		--DoAuras(self)
+		makePhaseIcon(self)
 	end,
 	player = function(self, ...)
 		local settings = CopyTable(big)
@@ -915,6 +938,7 @@ local UnitSpecific = {
 		makeBanzai(self)
 		makeHealComm(self)
 		makeResComm(self)
+		makePhaseIcon(self)
 	end,
 	pet = function(self, ...)
 		local settings = CopyTable(small)
@@ -923,6 +947,7 @@ local UnitSpecific = {
 		makeBanzai(self)
 		makePetTTL(self)
 		makeHealComm(self)
+		makePhaseIcon(self)
 	end,
 	raid = function(self, ...)
 		Shared(self, raid, ...)
@@ -938,6 +963,7 @@ local UnitSpecific = {
 		makeHealComm(self)
 		makeResComm(self)
         makeLFDRole(self)
+		makePhaseIcon(self)
 	end,
 	maintank = function(self, ...)
 		local settings = CopyTable(small)
@@ -951,6 +977,7 @@ local UnitSpecific = {
 		makeBanzai(self)
 		makeHealComm(self)
 		makeResComm(self)
+		makePhaseIcon(self)
 	end,
 }
 
