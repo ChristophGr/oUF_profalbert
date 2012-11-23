@@ -767,46 +767,19 @@ local function makeDebuffHighlighting(self)
 	self.DebuffHighlightFilter = not unfiltered -- only show debuffs I can cure, if I can cure any
 end
 
-local libResComm = LibStub("LibResComm-1.0")
-
 local function makeResComm(self)
-	local sb = CreateFrame("StatusBar", nil, self.Health)
-	local h = self:GetHeight()
-	local w = self:GetWidth()
-	local diff = h/8
-	--sb:SetHeight(h/2.5)
-	--sb:SetWidth(h/2.5)
-	sb:SetPoint("TOPLEFT", self.Health, "TOPLEFT", diff, -diff)
-	sb:SetPoint("BOTTOMRIGHT", self.Health, "BOTTOMRIGHT", -diff, diff)
-	sb:SetFrameLevel(self:GetFrameLevel() + 2)
-	sb:SetStatusBarTexture(_TEXTURE)
-	sb:SetStatusBarColor(0.5,0.5,1)
-	local bg = sb:CreateTexture(nil, "BORDER")
-	bg:SetAllPoints(sb)
-	bg:SetTexture(_TEXTURE)
-	local rezzer = getFontString(sb)
-	rezzer:SetAllPoints(sb)
-	local function update()
-		if not self.unit then return end
-		local unitName = UnitName(self.unit)
-		local beingRessed, resserName = libResComm:IsUnitBeingRessed(unitName)
-		local hpv = self.Health.value
-		if beingRessed then
-			if hpv then
-				hpv:Hide()
-			end
-			rezzer:SetText(resserName)
-		else
-			if hpv then
-				hpv:Show()
-			end
-			rezzer:SetText("")
-		end
-	end
-	libResComm.RegisterCallback("oUF_ResComm" .. self:GetName(), "ResComm_ResStart", update)
-	libResComm.RegisterCallback("oUF_ResComm" .. self:GetName(), "ResComm_ResEnd", update)
-	sb:Hide()
-	self.ResComm = sb
+	local frame = CreateFrame('Frame', self.Health)
+	local icon = frame:CreateTexture(nil, "OVERLAY")
+	icon:SetTexture[[Interface\RaidFrame\Raid-Icon-Rez]]
+	icon:SetAllPoints(frame)
+	local size = min(self:GetHeight(), self:GetWidth()) / 2
+	frame:SetWidth(size)
+	frame:SetHeight(size)
+	frame:SetPoint("CENTER", self.Health, "CENTER")
+	frame:SetFrameLevel(self:GetFrameLevel() + 1)
+-- 	icon:SetPoint("BOTTOMRIGHT", self.Health, "BOTTOMRIGHT", -diff, diff)
+	frame:Hide()
+	self.ResurrectIcon = frame
 end
 local function makeBackground(self)
 	local wbBackground = self:CreateTexture(nil, "BORDER")
@@ -825,7 +798,6 @@ local function makeClassSpecific(self)
 			wb:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 4)
 			wb:SetWidth(self:GetWidth())
 			wb:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT", 0, 4)
-
 			wb[1] = CreateFrame("StatusBar", "TukuiWarlockSpecBars1", wb)
 			wb[1]:SetStatusBarTexture(_TEXTURE)
 			makeBackground(wb[1])
