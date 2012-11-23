@@ -81,6 +81,9 @@ end
 
 oUF.Tags.Methods["profalbert:dead"] = function(u)
 	if UnitHasIncomingResurrection(u) then
+		if unit == "player" then
+			 return string.format('Rez %s', ResurrectGetOfferer())
+		end
 		return 'Rezzing'
 	elseif(UnitIsDead(u)) then
 		return 'Dead'
