@@ -48,6 +48,7 @@ function round(num, idp)
 	return math.floor(num * mult + 0.5) / mult
 end
 
+-- AbbreviateLargeNumbers
 local siValueShort = function(val)
 	if(val >= 1e7) then
 		return ("%dm"):format(round(val / 1e6))
@@ -781,6 +782,19 @@ local function makeDebuffHighlighting(self)
 	self.DebuffHighlightFilter = not unfiltered -- only show debuffs I can cure, if I can cure any
 end
 
+local function makeQuestIcon(self)
+	local frame = CreateFrame('Frame', self)
+	local icon = frame:CreateTexture(nil, "OVERLAY")
+	icon:SetTexture[[Interface\TargetingFrame\PortraitQuestBadge]]
+	icon:SetAllPoints(frame)
+	local size = 16 -- min(self:GetHeight(), self:GetWidth()) / 2
+	frame:SetWidth(size)
+	frame:SetHeight(size)
+	frame:SetPoint("RIGHT", self, "TOPRIGHT")
+	frame:SetFrameLevel(self:GetFrameLevel() + 1)
+	frame:Hide()
+	self.QuestIcon = frame
+end
 local function makeResComm(self)
 	local frame = CreateFrame('Frame', self.Health)
 	local icon = frame:CreateTexture(nil, "OVERLAY")
@@ -880,6 +894,7 @@ local UnitSpecific = {
 		makeDebuffs(self, settings.debuffs)
 		makeComboPoints(self)
 		makePhaseIcon(self)
+		makeQuestIcon(self)
 	end,
 	targettarget = function(self, ...)
 		local settings = CopyTable(small)
@@ -939,6 +954,7 @@ local UnitSpecific = {
 		makeHealComm(self)
 		makeResComm(self)
 		makePhaseIcon(self)
+		makeQuestIcon(self)
 	end,
 	pet = function(self, ...)
 		local settings = CopyTable(small)
@@ -978,6 +994,7 @@ local UnitSpecific = {
 		makeHealComm(self)
 		makeResComm(self)
 		makePhaseIcon(self)
+		makeQuestIcon(self)
 	end,
 }
 
