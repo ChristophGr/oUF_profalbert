@@ -783,7 +783,7 @@ local function makeDebuffHighlighting(self)
 end
 
 local function makeQuestIcon(self)
-	local frame = CreateFrame('Frame', self)
+	local frame = CreateFrame('Frame', nil, self)
 	local icon = frame:CreateTexture(nil, "OVERLAY")
 	icon:SetTexture[[Interface\TargetingFrame\PortraitQuestBadge]]
 	icon:SetAllPoints(frame)
@@ -796,7 +796,7 @@ local function makeQuestIcon(self)
 	self.QuestIcon = frame
 end
 local function makeResComm(self)
-	local frame = CreateFrame('Frame', self.Health)
+	local frame = CreateFrame('Frame', nil, self)
 	local icon = frame:CreateTexture(nil, "OVERLAY")
 	icon:SetTexture[[Interface\RaidFrame\Raid-Icon-Rez]]
 	icon:SetAllPoints(frame)
@@ -809,7 +809,7 @@ local function makeResComm(self)
 	self.ResurrectIcon = frame
 end
 local function makePhaseIcon(self)
-	local frame = CreateFrame('Frame', self.Health)
+	local frame = CreateFrame('Frame', nil, self)
 	local icon = frame:CreateTexture(nil, "OVERLAY")
 	icon:SetTexture[[Interface\TargetingFrame\UI-PhasingIcon]]
 	icon:SetAllPoints(frame)
