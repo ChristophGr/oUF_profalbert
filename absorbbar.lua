@@ -47,8 +47,14 @@ local Update = function(self, event, unit)
 	if amount > 0 then
 		absorb:SetMinMaxValues(0, max)
 		absorb:SetValue(amount)
+		if absorb.Value then
+			absorb.Value:SetText(tostring(amount))
+		end
 	else
 		absorb:SetValue(0)
+		if absorb.Value then
+			absorb.Value:SetText("")
+		end
 	end
 end
 
@@ -57,12 +63,18 @@ local Enable = function(self)
 	self.Absorb:SetValue(0)
 	self.Absorb:SetMinMaxValues(0,1)
 	self.Absorb.data = {}
+	if self.Absorb.Value then
+		self.Absorb.Value:SetText("")
+	end
 	self:RegisterEvent("UNIT_AURA", Update)
 end
 
 local Disable = function(self)
 	if not self.Absorb then return end
 	self:UnregisterEvent("Update")
+	if absorb.Value then
+		absorb.Value:SetText("")
+	end
 end
 
 oUF:AddElement('Absorb', Update, Enable, Disable)

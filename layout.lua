@@ -341,6 +341,10 @@ local function makeAbsorbBar(self, height, anchors)
 	Absorb:SetPoint("LEFT")
 	Absorb:SetPoint("RIGHT")
 	Absorb:SetPoint("BOTTOM", self, "TOP")
+	Absorb:SetStatusBarColor(.3, .3, .3)
+	local Value = getFontString(Absorb)
+	Value:SetPoint("CENTER", Absorb, "CENTER")
+	Absorb.Value = Value
 	self.Absorb = Absorb
 end
 
