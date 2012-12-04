@@ -334,6 +334,16 @@ local function makeHealComm(self)
 	self.allowHealCommOverflow = true
 end
 
+local function makeAbsorbBar(self, height, anchors)
+	local Absorb = CreateFrame("StatusBar", nil, self)
+	Absorb:SetHeight(height or 20)
+	Absorb:SetStatusBarTexture(_TEXTURE)
+	Absorb:SetPoint("LEFT")
+	Absorb:SetPoint("RIGHT")
+	Absorb:SetPoint("BOTTOM", self, "TOP")
+	self.Absorb = Absorb
+end
+
 local function makeHealthBar(self, height, anchors) -- above, portrait, right)
 	local Health = CreateFrame("StatusBar", nil, self)
 	Health:SetHeight(height or 20)
@@ -922,7 +932,7 @@ local UnitSpecific = {
 		makeResComm(self)
 		makeClassSpecific(self)
 		makeComboPoints(self)
-
+		makeAbsorbBar(self)
 		RuneFrame:ClearAllPoints()
 		RuneFrame:SetPoint("BOTTOM", self, "TOP", 0, 5)
 		--DoPower(self)

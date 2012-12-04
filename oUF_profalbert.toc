@@ -9,5 +9,6 @@
 
 warlockSpecBars.lua
 portrait2.lua
+absorbbar.lua
 layout.xml
 layout.lua
