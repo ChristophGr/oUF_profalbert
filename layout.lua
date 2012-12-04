@@ -1037,9 +1037,9 @@ local spawnHelper = function(self, unit, ...)
 end
 
 oUF:Factory(function(self)
-	local player = spawnHelper(self, 'player', "RIGHT", UIParent, "CENTER", -80, -230)
+	local player = spawnHelper(self, 'player', "BOTTOMRIGHT", WorldFrame, "BOTTOM", -80, 25)
 	spawnHelper(self, 'pet', "BOTTOMRIGHT", player, "TOPLEFT", -25, -10)
-	local target = spawnHelper(self, 'target',"LEFT", UIParent, "CENTER", 80, -230)
+	local target = spawnHelper(self, 'target',"BOTTOMLEFT", WorldFrame, "BOTTOM", 80, 25)
 	spawnHelper(self, 'targettarget', "BOTTOMLEFT", target, "TOPRIGHT", 25, 10)
 
 	local focus = spawnHelper(self, 'focus', "TOPLEFT", UIParent, "TOPLEFT", 320, -240)
