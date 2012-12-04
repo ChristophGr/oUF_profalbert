@@ -10,9 +10,9 @@ local ABSORB_SPELLS = {
 	[GetSpellInfo(56778)] = true, -- Mana Shield
 	[GetSpellInfo(7812)] = true, -- Sacrifice
 	-- local AB_MW = 'Mage Ward'
-	[GetSpellInfo(116631)] = true -- Colossus (Weapon Enchant)
-	[GetSpellInfo(118604)] = true -- Guard (Monk)
-	[GetSpellInfo(116849)] = true -- Life Cocoon (Monk)
+	[GetSpellInfo(116631)] = true, -- Colossus (Weapon Enchant)
+	[GetSpellInfo(118604)] = true, -- Guard (Monk)
+	[GetSpellInfo(116849)] = true, -- Life Cocoon (Monk)
 }
 
 local newdata = {}
@@ -40,7 +40,6 @@ end
 
 local Update = function(self, event, unit)
 	if(not unit or not UnitIsUnit(self.unit, unit)) then return end
-	print("updating AbsorbBar")
 	local absorb = self.Absorb
 	local amount, max, data = updateAbsorbInfo(unit, absorb.data)
 	absorb.data = data
@@ -60,8 +59,8 @@ end
 
 local Enable = function(self)
 	if not self.Absorb then return end
+	self.Absorb:SetMinMaxValues(0, 1)
 	self.Absorb:SetValue(0)
-	self.Absorb:SetMinMaxValues(0,1)
 	self.Absorb.data = {}
 	if self.Absorb.Value then
 		self.Absorb.Value:SetText("")
